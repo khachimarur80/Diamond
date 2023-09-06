@@ -1,0 +1,283 @@
+<template>
+    <div class="treeview-container">
+        <div class="tree-node main-node" v-if="vault">
+            <div class="node-content">
+                <div class="node-content-text">
+                <div style="height: 5px; width: 20px;"></div>
+                <div class="node-file-name" :id="vault" @dragover="dragOverNode" @dragleave="dragLeaveNode" @drop="dragDropNode"
+                >{{ vault.split('/').slice(-1)[0] }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="tree-node" v-for="node in items" :key="node.id">
+            <div class="node-content">
+                <div class="node-indent" v-for="i in node.ancestors" :key="i"></div>
+                <div class="node-content-text">
+                <div class="node-content-collapse" v-if="node.children.length" :style="{'transform': node.open ? 'rotate(90deg)' : 'none' }" @click="node.open = !node.open">
+                    <v-icon color="#4f4f4f" size="20">
+                        mdi-chevron-right
+                    </v-icon>
+                </div>
+                <div style="height: 5px; width: 20px;" v-else></div>
+                <div @dblclick="editFile" @blur="saveFile" @click="openFile(node)" @contextmenu.prevent="nodeMouseDown"
+                    @dragover="dragOverNode" @dragleave="dragLeaveNode" @dragstart="dragStartNode" @drop="dragDropNode"
+                    @dragend="dragEndNode" draggable=true class="node-file-name" :id="node.id">{{ node.name }}</div>
+                </div>
+            </div>
+            <treeview :items="node.children" :vault="null" v-if="node.open" class="node"></treeview>
+        </div>
+    </div>
+</template>
+
+<script>
+  export default {
+    name: 'TreeView',
+  
+    data: () => ({
+    }),
+
+    props: {
+      items: {
+        type: Array,
+        required: true,
+      },
+      vault: {
+        type: String,
+        required: true,
+      },
+    },
+
+    methods: {
+        findNodeById(nodes, targetId) {
+        for (const node of nodes) {
+            if (node.id === targetId) {
+            return node;
+            } else if (node.children && node.children.length) {
+            const foundNode = this.findNodeById(node.children, targetId);
+            if (foundNode) {
+                return foundNode;
+            }
+            }
+        }
+        return null;
+        },
+        editFile(event) {
+            event.target.setAttribute('contenteditable', 'true')
+            const range = document.createRange();
+        range.selectNodeContents(event.target);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        },
+        async saveFile(event) {
+                event.target.setAttribute('contenteditable', 'false')
+
+                const message = await new Promise(resolve => {
+                        window.electronAPI.requestChangeFileName(event.target.id, event.target.innerText)
+                        window.electronAPI.response('change-filename-response', resolve)
+                    })
+
+                if (message) {
+                    var targetNode = this.findNodeById(this.items, event.target.id)
+                    this.$emit('saveFileNode', targetNode, message)
+                
+                    targetNode.name = message.split('/').splice(-1)[0].split('.').slice(0,-1).join(".")
+                    targetNode.id = message
+                }
+                else {
+                    event.target.innerText = this.findNodeById(this.items, event.target.id).name
+                }
+        },
+        openFile(node) {
+            if (!node.isDirectory) {
+                this.$emit('fileopened', node.id);
+            }
+            if (document.querySelector('.active-node')) {
+                document.querySelector('.active-node').classList.remove('active-node')
+            }
+            event.target.parentElement.parentElement.classList.add('active-node')
+        },
+        dragStartNode(event) {
+            event.target.setAttribute('data-dragging', true)
+        },
+        dragOverNode(event) {
+            event.preventDefault();
+            if (event.target.classList.contains('node-file-name') 
+                && !event.target.classList.contains('drag-over-node')
+                && !event.target.getAttribute('data-dragging')
+                ) {
+                event.target.classList.add('drag-over-node')
+                this.nodeOrigin = this.findNodeById(this.items, document.querySelector("[data-dragging='true']").id)
+            }
+        },
+        dragEndNode(event) {
+            event.target.removeAttribute('data-dragging')
+        },
+        dragLeaveNode(event) {
+            event.target.classList.remove('drag-over-node')
+        },
+        dragDropNode(event) {
+            var nodeDestiny = this.findNodeById(this.items, event.target.id)
+            if (nodeDestiny) {
+                if (nodeDestiny.isDirectory && nodeDestiny!=this.nodeOrigin) {
+                    this.$emit('filemove', this.nodeOrigin.id, nodeDestiny.id);
+                }
+            }
+            else {
+                this.$emit('filemove', this.nodeOrigin.id, event.target.id);
+            }
+            event.target.classList.remove('drag-over-node')
+            this.nodeOrigin = null
+        },
+        nodeMouseDown(event) {
+            this.$emit('nodeMouseDown', event)
+        }
+    }
+
+  };
+</script>
+
+<style>
+    .tree-node {
+        position: relative;
+        z-index: 1;
+    }
+
+    .node-indent {
+        width: 15px;
+        height: 28px ;
+        transform: translateX(13px);
+        border-left: 1px solid #4E4E4E;
+    }
+
+    .node-content {
+        font-size: 14px;
+        color: #B9B9B9;
+        display: flex;
+        padding-right: 10px;
+        align-items: center;
+    }
+    .node-content-collapse {
+        transition: transform ease-in-out .2s;
+        position: relative;
+    }
+    .node-content::after {
+        content: '';
+        width: 1px;
+        position: absolute;
+        top: 0px;
+        bottom: 0px;
+        left: 8px;
+        background: #4F4F4F;
+        display: none;
+    }
+    .node-content-collapse:hover * {
+        color: #628DD0 !important;
+    }
+    .node-content-opened {
+        transform: rotate(90deg);
+    }
+    .node-content::before {
+    content: '';
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    height: 24px;
+    left: 1px;
+    border-radius: 3px;
+    z-index: -1;
+    transition: background ease-in-out 0.1s;
+    }
+    .node-content::before:last-child {
+    background: red;
+    }
+    .node-content:hover::before {
+    background: #363636;
+    }
+    .node-content-text {
+        padding: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: flex;
+        width: 100%;
+    }
+
+    .treeview-container {
+        padding: 10px;
+        height: calc(100% - 60px);
+        padding-bottom: 20px;
+        overflow: scroll;
+    }
+    .node-file-name {
+        padding: 1px;
+        padding-left: 5px;
+        padding-right: 5px;
+        border-radius: 3px;
+        flex: 1;
+    }
+    .node-file-name:focus-within {
+        outline: none;
+    }
+    .node-file-name:focus-within::before {
+    content: '';
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    height: 26px;
+    left: 0px;
+    border-radius: 3px;
+    z-index: -1;
+    border: 1px solid #628DD0;;
+    }
+    .active-node::before {
+    content: '';
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    height: 24px;
+    left: 1px;
+    border-radius: 3px;
+    z-index: -1;
+    background: #363636;
+    }
+    .drag-over-node::before {
+    content: '';
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    height: 26px;
+    left: 0px;
+    border-radius: 3px;
+    z-index: -1;
+    border: 1px solid #628DD0;
+    }
+    #node-click-menu {
+        position: absolute;
+        border: 1px solid rgb(87, 87, 87);
+        width: fit-content;
+        min-height: 48px;
+        border-radius: 5px;
+        z-index: 101;
+        background: rgba(45, 45, 45);
+        outline: 1px solid rgb(8, 8, 8);
+        height: fit-content;
+        padding: 3px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+    .node-menu-item {
+        font-size: 14px;
+        min-width: 120px;
+        display: flex;
+        padding-left: 10px;
+        color: #B9B9B9;
+        justify-content: start;
+        align-items: center;
+        border-radius: 3px;
+    }
+    .node-menu-item:hover {
+        background: rgba(98, 141, 208, .7);
+    }
+</style>

@@ -3,8 +3,15 @@
       <div id="app-container">
         <TitleBar :files="files" :file="file" :currentGroup="currentGroup"></TitleBar>
         <div id="app-contents">
+          <div id="sidebar">
+            <div class="content-wrapper">
+              <div id="sidebar-contents">
+                <TreeView :items="treeDataView" :vault="vault"></TreeView>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+    </div>
     </v-app>
 </template>
     
@@ -27,12 +34,14 @@
   }
 
   import TitleBar from './components/TitleBar';
+  import TreeView from './components/TreeView';
 
   export default {
     name: 'MainWin',
   
     components: {
-      TitleBar
+      TitleBar,
+      TreeView,
     },
     
   
@@ -51,6 +60,7 @@
       queries: {
         flag: false,
       },
+      vault: '',
     }),
 
     methods: {
@@ -188,5 +198,22 @@
     display: flex;
     height: 100%;
     width: 100%;
+  }
+
+  #sidebar-contents {
+    flex: 1;
+    overflow: hidden;
+  }
+  .content-wrapper {
+    height: calc(100vh - 30px);
+    width: 100%;
+  }
+  #sidebar {
+    height: 100%;
+    background: #262626;
+    position: relative;
+    transition: margin 0.15s ;
+    user-select: none;
+    width: 245px;
   }
 </style>
