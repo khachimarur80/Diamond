@@ -331,10 +331,6 @@ app.on('ready', async () => {
 
     mainWindow = createMainWindow('subpage', 'subpage.html')
 
-    mainWindow.webContents.on('dom-ready', () => {
-      mainWindow.webContents.send("vault-name-response", vaultName);
-    });
-
     mainWindow.on('blur', () => {
       mainWindow.webContents.executeJavaScript('document.documentElement.style.setProperty("--main-bg", "#262626")')
     });
@@ -369,6 +365,10 @@ app.on('ready', async () => {
       }
     }
   });
+
+  ipcMain.on('vault-data', (event) => {
+    mainWindow.webContents.send("vault-name-response", currentVault);
+  })
 
 ipcMain.on('request-change-filename', (event, targetFile, value) => {
   console.log("Change filename requested!");

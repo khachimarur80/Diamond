@@ -1,6 +1,6 @@
 <template>
     <v-app>
-        <div style="display: flex; width: 100h;" v-if="currentGroup.id" id="title-bar">
+        <div style="display: flex; width: 100h;" v-if="currentGroup" id="title-bar">
             <div class="title-bar" id="sidebar-title-bar">
                 <div class="default-buttons">
                     <button id="close" @click="closeWindow">
@@ -58,9 +58,6 @@
                 </v-btn>
             </div>
         </div>
-        <div v-else>
-            <h1>Sadge</h1>
-        </div>
     </v-app>
 </template>
 
@@ -75,11 +72,11 @@
         required: true,
       },
       file: {
-        type: Array,
+        type: String,
         required: true,
       },
       currentGroup: {
-        type: Object,
+        type: null,
         required: true,
       }
     },
@@ -91,8 +88,49 @@
         createTab() {
 
         },
-        toggleQueries() {
+        toggleSidebar() {
+            this.sidebar.flag = !this.sidebar.flag
+            const sidebar = document.getElementById('sidebar');
+            const sidebarResize = document.getElementById('resizeBarLeft');
 
+            if (this.sidebar.flag) {
+                sidebar.style.display = 'block'
+                sidebar.style.marginLeft = '0px';
+                sidebar.firstElementChild.style.flexDirection = "row";
+                document.getElementById('sidebar-title-bar').style.width = this.sidebar.width + 'px'
+                setTimeout(()=>{
+                    document.getElementById('sidebar-title-bar').style.transition = ""
+                    sidebarResize.style.display = 'block'
+                }, 200)
+            }
+            else {
+                sidebar.style.marginLeft= '-' + (sidebar.getBoundingClientRect().width - 40) + 'px';
+                sidebar.firstElementChild.style.flexDirection = "row-reverse";
+                sidebarResize.style.display = 'none'
+                document.getElementById('sidebar-menu').marginRight = '0px'
+                document.getElementById('sidebar-title-bar').style.transition = 'width .15s'
+                document.getElementById('sidebar-title-bar').style.width = "120px"
+            }
+        },
+        toggleQueries() {
+            this.queries.flag = !this.queries.flag
+            const queries = document.getElementById('queries');
+            const queriesResize = document.getElementById('resizeBarRight');
+
+            if (this.queries.flag) {
+                queries.style.display = 'block'
+                queries.style.marginRight = '0px';
+                queriesResize.style.display = 'block'
+                setTimeout(()=>{
+                    document.getElementById('queries-title-bar').style.transition = ''
+                }, 200)
+            }
+            else {
+                document.getElementById('queries-title-bar').style.width = '40px'
+                document.getElementById('queries-title-bar').style.transition = 'width .15s'
+                queries.style.marginRight = '-' + (queries.getBoundingClientRect().width ) + 'px';
+                queriesResize.style.display = 'none'
+            }
         },
         removeFile() {
 

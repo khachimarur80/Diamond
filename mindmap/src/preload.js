@@ -29,7 +29,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   exitVault: () => ipcRenderer.send('exit-vault'),
   openFileBrowser: () => ipcRenderer.send('open-file-browser'),
   moveFileRequest: (filepath, destinypath) => ipcRenderer.send('move-file-request', filepath, destinypath),
-  pathValid: (path) => ipcRenderer.send('path-valid', path)
+  pathValid: (path) => ipcRenderer.send('path-valid', path),
+  requestVaultData: () => ipcRenderer.send('vault-data')
 })
 
 //ipcRenderer.on(channel, (event, ...args) => listener(...args))
