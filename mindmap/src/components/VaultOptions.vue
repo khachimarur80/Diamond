@@ -46,11 +46,11 @@
         <div class="option">
         <div class="option-text">
         <div class="option-text">
-        <p>Open selected vault</p>
+        <p>Open folder as vault</p>
         <p style="font-size: 13px;">Select an existing vault and open it</p>
         </div>
         </div>
-        <v-btn :disabled="selectedVault==null" dense width="100" color="#628DD0" @click="openVault">Open</v-btn>
+        <v-btn dense width="100" color="#628DD0" @click="openVault">Open</v-btn>
         </div>
         <v-divider></v-divider>
       </div>
@@ -66,17 +66,54 @@
       newVaultName: null,
       newVaultLocation: null,
       errorMessage: false,
-      selectedVault: null,
       createVault: false,
     }),
 
+    props: {
+      vaults: {
+        type: Array,
+        required: true,
+      },
+    },
+    
     methods: { 
-      openVault() {
-      },
-      createVaultFunc() {
-      },
-      openFileBrowser() {
+      async createVaultFunc() {
+        if (this.newVaultLocation && this.newVaultName) {
+          this.createVault = false
 
+          const message = await new Promise(resolve => {
+            window.electronAPI.createNewVault(this.newVaultName, this.newVaultLocation)
+            window.electronAPI.response('vault-creation-response', resolve)
+          });
+
+          this.$emit('addVault', message)
+          console.log(message)
+          window.localStorage.setItem('vaults', JSON.stringify(this.vaults))
+        }
+        else {
+          this.errorMessage = "Please provide a name and a location.";
+          setTimeout(()=>{
+            this.errorMessage = null
+          }, 2000)
+        }
+      },
+      async openVault() {
+        this.waiting = true
+        const message = await new Promise(resolve => {
+          window.electronAPI.openFileBrowser()
+          window.electronAPI.response('open-file-browser-response', resolve)
+          this.waiting = false
+        });
+        this.$emit('addVault', message)
+      },
+      async openFileBrowser() {
+        this.waiting = true
+        const message = await new Promise(resolve => {
+          window.electronAPI.openFileBrowser()
+          window.electronAPI.response('open-file-browser-response', resolve)
+          this.waiting = false
+        });
+        this.newVaultLocation = message
       },
     },
   }

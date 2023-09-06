@@ -1,0 +1,297 @@
+<template>
+    <v-app>
+        <div style="display: flex; width: 100h;" v-if="currentGroup.id" id="title-bar">
+            <div class="title-bar" id="sidebar-title-bar">
+                <div class="default-buttons">
+                    <button id="close" @click="closeWindow">
+                        <v-icon size="10px" color="black" class="default-button-icon">
+                            mdi-close
+                        </v-icon>
+                    </button>
+                    <button id="minimize" @click="minimizeWindow">
+                        <v-icon size="10px" color="black" class="default-button-icon">
+                            mdi-minus
+                        </v-icon>
+                    </button>
+                    <button id="expand" @click="expandWindow">
+                        <v-icon size="10px" color="black" class="default-button-icon" style="transform: rotate(-45deg);">
+                            mdi-unfold-more-horizontal
+                        </v-icon>
+                    </button>
+                </div>
+                <v-btn class="toggle-sidebar-left" small icon dense @click="toggleSidebar">
+                    <v-icon size="20" color="secondary">
+                        mdi-newspaper-variant-outline
+                    </v-icon>
+                </v-btn>
+            </div>
+            <div class="title-bar" id="body-title-bar">
+                <div id="tabs">
+                    <div v-for="tab in files" class="tab" @click="setFile(tab)" :class="{ currentTab: file == tab[0] }" :key="tab[0]">	
+                        <div class="tab-smoother-left" v-if="file == tab[0]">
+                            <div></div>
+                        </div>
+                        <div class="tab-inner">
+                            <span class="tab-text">{{ tab[1] }}</span>
+                            <v-btn dense icon x-small @click="removeFile(tab)" :color="file == tab[0] ? 'white' : 'secondary'" class="tab-btn">
+                                <v-icon small>mdi-close</v-icon>
+                            </v-btn>
+                        </div>
+                        <div class="tab-smoother-right" v-if="file == tab[0]">
+                            <div></div>
+                        </div>
+                    </div>
+                    <div class="create-tab-btn">
+                        <v-btn dense icon x-small color="secondary" style="margin-bottom: -3px; -webkit-app-region: no-drag;" @click="createTab">
+                            <v-icon size="20">
+                                mdi-plus
+                            </v-icon>
+                        </v-btn>
+                    </div>
+                </div>
+            </div>
+            <div class="title-bar" id="queries-title-bar" >
+                <v-btn class="toggle-sidebar-right" small icon dense  @click="toggleQueries">
+                    <v-icon size="20" color="secondary">
+                        mdi-newspaper-variant-outline
+                    </v-icon>
+                </v-btn>
+            </div>
+        </div>
+        <div v-else>
+            <h1>Sadge</h1>
+        </div>
+    </v-app>
+</template>
+
+<script>
+  
+  export default {
+    name: 'TitleBar',
+    
+    props: {
+      files: {
+        type: Array,
+        required: true,
+      },
+      file: {
+        type: Array,
+        required: true,
+      },
+      currentGroup: {
+        type: Object,
+        required: true,
+      }
+    },
+    
+    data: () => ({
+    }),
+  
+    methods: {
+        createTab() {
+
+        },
+        toggleQueries() {
+
+        },
+        removeFile() {
+
+        },
+        setFile() {
+
+        },
+        closeWindow() {
+
+        },
+        minimizeWindow() {
+
+        },
+        expandWindow() {
+
+        },
+    },
+  
+    async created() {
+    }
+  };
+</script>
+
+<style scoped>
+.default-buttons {
+	position: absolute;
+	left: 12px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 7px;
+	-webkit-app-region: no-drag;
+}
+.default-buttons button {
+	border: none;
+	height: 12px;
+	width: 12px;
+	border-radius: 50%;
+}
+.default-button-icon {
+	display: none !important;
+}
+.default-buttons:hover .default-button-icon {
+	display: block !important;
+}
+#close {
+	background: rgb(255, 95, 87);
+}
+#minimize {
+	background: rgb(254, 188, 46);
+}
+#expand {
+	background: rgb(40, 200, 64);
+}
+#body-title-bar {
+	flex: 1;
+	border-bottom: 1px solid #363636;
+}
+#sidebar-title-bar {
+	min-width: 120px !important;
+	border-bottom: 1px solid #363636;
+}
+#queries-title-bar {
+	border-bottom: 1px solid #363636;
+}
+
+.title-bar {
+  height: 40px;
+  color: white;
+  -webkit-app-region: drag;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  background: var(--main-bg);
+}
+.title-bar:first-child {
+	justify-content: end;
+}
+.title-bar:last-child {
+	justify-content: start;
+}
+.content-wrapper {
+	height: calc(100vh - 30px);
+	width: 100%;
+}
+#tabs {
+	height: 40px;
+	width: 100%;
+	display: flex;
+	text-align: center;
+	color: #777;
+	gap: 6px;
+	box-sizing: content-box;
+	align-items: end;
+}
+.tab:first-child {
+	margin-left: 8px;
+}
+.tab:last-child {
+	margin-right: 8px;
+}
+.tab {
+	display: flex;
+	height: 32px;
+	justify-content: center;
+	align-items: start;
+	border-radius: 9px 9px 0px 0px;
+	padding-top: 3px;
+	padding-left: 3px;
+	padding-right: 3px;
+	user-select: none;
+	gap: 5px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	flex: 1;
+	min-width: 30px;
+	max-width: 200px;
+	position: relative;
+	transform: translateY(2px);
+	border-bottom: 1px solid #1e1e1e;
+	-webkit-app-region: no-drag;
+	text-overflow: ellipsis;
+	flex-shrink: 1;
+}
+.tab-inner {
+	width: 100%;
+	height: calc(100% - 8px);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: relative;
+	border-radius: 5px;
+}
+.tab-inner:hover {
+  background: #454545;
+}
+.tab-text {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	width: 100%;
+	margin-left: 10px;
+	margin-right: 20px;
+}
+.tab-smoother-right {
+  width: 8px;
+  height: 20px;
+  background-color: #1e1e1e;
+  position: absolute;
+  right: -8px;
+  bottom: -1px;
+  padding-bottom: 2px;
+}
+.tab-smoother-left {
+	width: 8px;
+  height: 20px;
+  background-color: #1e1e1e;
+  position: absolute;
+  left: -8px;
+  bottom: -1px;
+  padding-bottom: 2px;
+}
+
+.tab-smoother-left div, .tab-smoother-right div {
+	background: var(--main-bg);
+	border: 1px solid #363636;
+	box-sizing: border-box;
+	border-top: none;
+	height: 100%;
+	width: 100%;
+}
+
+.tab-smoother-right div {
+	border-radius: 0px 0px 0px 8px;
+	border-right: none;
+}
+.tab-smoother-left div {
+	border-radius: 0px 0px 8px 0px;
+	border-left: none;
+}
+
+.tab-btn {
+	position: absolute !important;
+	right: 5px;
+}
+.create-tab-btn {
+	display: flex;
+	align-items: center;
+	height: 100%;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+.currentTab, .currentTab .tab-inner {
+	color: white;
+	background: #1e1e1e !important;
+}
+.currentTab {
+	border-top: 1px solid #363636;
+	border-left: 1px solid #363636;
+	border-right: 1px solid #363636;
+}
+</style>

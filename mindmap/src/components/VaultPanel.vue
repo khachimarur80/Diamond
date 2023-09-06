@@ -18,12 +18,12 @@
     </div>
     <br>
     <v-list flat>
-      <v-list-item-group v-model="selectedVault">
+      <v-list-item-group>
         <v-list-item v-for="(vault, i) in vaults" :key="i" color="#628DD0">
           <v-list-item-icon>
             <v-icon>mdi-folder</v-icon>
           </v-list-item-icon>
-          <v-list-item-content>
+          <v-list-item-content @mouseup="openVault(vault)">
             <v-list-item-title v-text="vault.name"></v-list-item-title>
             </v-list-item-content>
           <v-list-item-icon >
@@ -39,16 +39,26 @@
   export default {
     name: 'VaultPanel',
 
-    data: () => ({
-      selectedVault: null,
-      vaults: [],
-    }),
+    props: {
+      vaults: {
+        type: Array,
+        required: true,
+      },
+    },
 
     methods: { 
       closeWindow() {
+      window.electronAPI.closeWindow()
       },
       minimizeWindow() {
-      }
+        window.electronAPI.minimizeWindow()
+      },
+      openVault(vault) {
+        window.electronAPI.openVault(vault.id)
+      },
+      removeVault(vault) {
+        this.$emit('removeVault', vault)
+      },
     },
   }
 </script>
