@@ -1,14 +1,14 @@
 <template>
     <v-app>
-      <div id="app-container">
+      <div id="app-container" v-if="currentGroup">
         <TitleBar :files="files" :file="file" :currentGroup="currentGroup"></TitleBar>
         <div id="app-contents">
           <SideBar :items="treeDataView" :vault="vault"></SideBar>
           <div id="body">
-            <TextEditor></TextEditor>
+            <TextEditor :file="file"></TextEditor>
             <QueryView></QueryView>
           </div>
-          <QueryBar></QueryBar>
+          <QueryBar :currentGroup="currentGroup"></QueryBar>
         </div>
     </div>
     </v-app>
@@ -184,25 +184,3 @@
     },
   };
 </script>
-    
-<style>
-  body, html {
-    margin: 0px;
-    height: 100%;
-    width: 100%;
-    padding: 0px;
-  }
-  ::-webkit-scrollbar {
-    display: none;
-  }
-  #app-container {
-    height: 100vh;
-    width: 100h;
-  }
-  #app-contents {
-    display: flex;
-    height: calc(100% - 40px);
-    width: 100%;
-  }
-
-</style>
