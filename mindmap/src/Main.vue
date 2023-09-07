@@ -3,13 +3,12 @@
       <div id="app-container">
         <TitleBar :files="files" :file="file" :currentGroup="currentGroup"></TitleBar>
         <div id="app-contents">
-          <div id="sidebar">
-            <div class="content-wrapper">
-              <div id="sidebar-contents">
-                <TreeView :items="treeDataView" :vault="vault"></TreeView>
-              </div>
-            </div>
+          <SideBar :items="treeDataView" :vault="vault"></SideBar>
+          <div id="body">
+            <TextEditor></TextEditor>
+            <QueryView></QueryView>
           </div>
+          <QueryBar></QueryBar>
         </div>
     </div>
     </v-app>
@@ -33,15 +32,21 @@
     }
   }
 
+  import SideBar from './components/SideBar';
+  import QueryBar from './components/QueryBar';
   import TitleBar from './components/TitleBar';
-  import TreeView from './components/TreeView';
+  import TextEditor from './components/TextEditor';
+  import QueryView from './components/QueryView';
 
   export default {
     name: 'MainWin',
   
     components: {
+      SideBar,
+      QueryBar,
       TitleBar,
-      TreeView,
+      TextEditor,
+      QueryView,
     },
     
   
@@ -196,24 +201,8 @@
   }
   #app-contents {
     display: flex;
-    height: 100%;
+    height: calc(100% - 40px);
     width: 100%;
   }
 
-  #sidebar-contents {
-    flex: 1;
-    overflow: hidden;
-  }
-  .content-wrapper {
-    height: calc(100vh - 30px);
-    width: 100%;
-  }
-  #sidebar {
-    height: 100%;
-    background: #262626;
-    position: relative;
-    transition: margin 0.15s ;
-    user-select: none;
-    width: 245px;
-  }
 </style>

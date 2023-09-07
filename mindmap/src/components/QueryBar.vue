@@ -3,7 +3,7 @@
 </template>
 <script>
     export default {
-        name: 'TextEditor',
+        name: 'QueryBar',
         data: () => ({}),
         props: {},
         methods: {},
