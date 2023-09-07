@@ -112,9 +112,10 @@ function handleRequestFileData(fileName) {
 function createMainWindow(devPath, prodPath) {
   // Create the browser window.
   const window = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1025,
+    height: 800,
     frame: false,
+    backgroundColor: '#262626',
     webPreferences: {
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
