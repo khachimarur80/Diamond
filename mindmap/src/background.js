@@ -327,7 +327,10 @@ app.on('ready', async () => {
       vaultWindow.close();
       vaultWindow = null;
     }
-
+    if (mainWindow) {
+      mainWindow.close();
+      mainWindow = null;
+    }
     mainWindow = createMainWindow('subpage', 'subpage.html')
 
     mainWindow.on('blur', () => {
@@ -386,9 +389,9 @@ ipcMain.on('request-change-filename', (event, targetFile, value) => {
   }
 
   fs.rename(targetFile, newFilePath, (err) => {
-    mainWindow.webContents.send('change-filename-response', newFilePath);
+      mainWindow.webContents.send('change-filename-response', newFilePath);
+    });
   });
-});
   
   ipcMain.on('create-file', (event, directory) => {
     const targetDirectory = getTargetDirectory(directory);

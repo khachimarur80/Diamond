@@ -61,11 +61,18 @@
 <script>
 
     import TreeView from './TreeView';
+    import EventBus from '../event-bus.js';
 
     export default {
         name: 'SideBar',
         data: () => ({
             treeViewOpened: true,
+            clickMenu: {
+                opened: false,
+                x: 0,
+                y: 0,
+                node: null,
+            },
         }),
         components: {
             TreeView,
@@ -82,7 +89,7 @@
         },
         methods: {
             exitVault() {
-
+                window.electronAPI.exitVault()
             },
             userHelp() {
 
@@ -90,18 +97,59 @@
             openSettings() {
 
             },
-            createFile() {
-
+            async createFile() {
+                if (this.file) {
+                    const message = await new Promise(resolve => {
+                        window.electronAPI.createFile(this.file)
+                        window.electronAPI.response('create-file-response', resolve)
+                    });
+                    EventBus.$emit('createFile', message)
+                }
+                else {
+                    const message = await new Promise(resolve => {
+                        window.electronAPI.createFile(this.vault)
+                        window.electronAPI.response('create-file-response', resolve)
+                    });
+                    EventBus.$emit('createFile', message)
+                }
             },
             createFolder() {
-
+                EventBus.$emit('createFolder')    
             },
             toggleTreeview() {
-
+                this.treeViewOpened = !this.treeViewOpened
+                const opened = this.treeViewOpened
+                EventBus.$emit('toggleTreeview', opened)
             },
-            clickMenu() {
-
+            nodeMouseDown(event) {
+                this.clickMenu.opened = true
+                this.clickMenu.x = event.clientX
+                this.clickMenu.y = event.clientY - 40
+                this.clickMenu.node = event.target
+                this.$nextTick(()=>{
+                    document.getElementById('node-click-menu').focus()
+                })
+            },
+            renameFile() {
+                var target = this.clickMenu.node
+                target.setAttribute('contenteditable', 'true')
+                const range = document.createRange();
+                range.selectNodeContents(target);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+            },
+            hideContextMenu() {
+                this.clickMenu.opened = false
+            },
+            removeNodeFile() {
+                this.clickMenu.opened = false
+                var target = this.clickMenu.node
+                EventBus.$emit('removeNodeFile', target)
             },
         },
+        created() {
+            EventBus.$on('nodeMouseDown', this.nodeMouseDown)
+        }
     }
 </script>
