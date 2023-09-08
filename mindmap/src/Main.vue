@@ -5,7 +5,7 @@
         <div id="app-contents">
         <SideBar :items="treeDataView" :vault="vault" @createFile="createFile"></SideBar>
         <div id="body">
-            <TextEditor :file="file"></TextEditor>
+            <TextEditor :file="file" :currentGroup="currentGroup"></TextEditor>
             <QueryView></QueryView>
         </div>
         <QueryBar :currentGroup="currentGroup"></QueryBar>
@@ -323,40 +323,6 @@ export default {
             window.electronAPI.requestSaveData(jsonString, this.vault+'/'+this.vault.split('/')[this.vault.split('/').length-1]+'.json')
 
         },
-        saveContents() {
-			/*if (this.file) {
-				var textContent = []
-				var lines = document.querySelectorAll('.line')
-				for (let i=0; i<lines.length; i++) {
-					textContent.push(lines[i].getAttribute('data-text')
-						//.replace('&nbsp;&nbsp;&nbsp;&nbsp;', '\t')
-						.replace(/\n$/, '')
-					)
-				}
-				window.electronAPI.requestSaveFile(this.file, textContent.join('\n'))
-			}*/
-		},
-        async loadContents() {
-            /*
-            document.getElementById('text').innerHTML = ''
-            this.textViewMode = 'edit'
-            const message = await new Promise(resolve => {
-                window.electronAPI.requestFileData(this.file)
-                window.electronAPI.response("file-data-response", resolve)
-            })
-            if (typeof message != 'string') {
-                this.files = this.files.filter(file => file[0]!=this.file)
-            }
-            else {
-                for (let i=0; i<message.split('\n').length; i++) {
-                    var newLine = this.createLine(message.split('\n')[i])
-                    this.renderMarkdown(newLine)
-                    document.getElementById('text').appendChild(newLine)
-                }
-                document.documentElement.style.setProperty('--line-count', document.querySelectorAll('.line').length.toString().length);
-            }
-            */
-        },
         pushObjectToCurrentGroup(object, queryTarget) {
             if (queryTarget===0) {
                 this.currentGroup.words.push(object)
@@ -367,6 +333,12 @@ export default {
             if (queryTarget===2) {
                 this.currentGroup.categories.push(object)
             }
+        },
+        pushConnectionToCurrentGroup(object) {
+            this.currentGroup.connections.push(object)
+        },
+        pushWordToCurrentGroup(object) {
+            this.currentGroup.words.push(object)
         },
         deleteObject() {
             if (this.selectedObject.objectType == 'Word') {
@@ -575,6 +547,8 @@ export default {
         EventBus.$on('createTab', this.createTab);
 
         EventBus.$on('pushObjectToCurrentGroup', this.pushObjectToCurrentGroup);
+        EventBus.$on('pushConnectionToCurrentGroup', this.pushConnectionToCurrentGroup);
+        EventBus.$on('pushWordToCurrentGroup', this.pushWordToCurrentGroup);
         EventBus.$on('selectedObject', this.setSelectedObject)
         EventBus.$on('deleteObject', this.deleteObject)
 
@@ -656,7 +630,6 @@ export default {
                     else {
                         this.navigated = false
                     }
-                    this.loadContents()
                     if (this.file.includes('/words/')) {
                         this.fileQuery = this.currentGroup.words.filter((e)=> e.file==this.file)[0]
                     }
