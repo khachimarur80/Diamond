@@ -32,6 +32,7 @@ class Group {
     }
 }
 
+
 import SideBar from './components/SideBar';
 import QueryBar from './components/QueryBar';
 import TitleBar from './components/TitleBar';
@@ -53,25 +54,45 @@ export default {
     
 
     data: () => ({
-    treeDataView: [],
-    currentGroup: null,
-    selectedObject: [],
-    files: [],
-    file: '',
-    queryTarget: null,
-    activeItem: null,
-    openedNodes: [],
-    sidebar: {
-        flag: true,
-    },
-    queries: {
-        flag: true,
-    },
-    vault: '',
-    navigated: [],
+        treeDataView: [],
+        currentGroup: null,
+        selectedObject: [],
+        files: [],
+        file: '',
+        activeItem: null,
+        openedNodes: [],
+        sidebar: {
+            flag: true,
+        },
+        queries: {
+            flag: true,
+        },
+        vault: '',
+        navigated: [],
     }),
 
     methods: {
+        getWordById(id) {
+            for(let i=0; i<this.currentGroup.words.length; i++) {
+                if (this.currentGroup.words[i].id==id) {
+                    return this.currentGroup.words[i]
+                }
+            }
+        },
+        getCategoryById(id) {
+            for(let i=0; i<this.currentGroup.categories.length; i++) {
+                if (this.currentGroup.categories[i].id==id) {
+                    return this.currentGroup.categories[i]
+                }
+            }
+        },
+        getConnectionById(id) {
+            for(let i=0; i<this.currentGroup.connections.length; i++) {
+                if (this.currentGroup.connections[i].id==id) {
+                    return this.currentGroup.connections[i]
+                }
+            }
+        },
         toggleSidebar() {
             this.sidebar.flag = !this.sidebar.flag
             const sidebar = document.getElementById('sidebar');
@@ -212,7 +233,7 @@ export default {
             for (let i=0; i<this.files.length; i++) {
                 if (this.files[i]==file) {
                     if (file[0]==this.file) {
-                        this.file = null
+                        this.file = ''
                     }
                     this.files.splice(i, 1)
                 }
@@ -243,7 +264,7 @@ export default {
             window.electronAPI.requestFileDeletion(target.id)
                 
             if (this.file == target.id) {
-                this.file = null	
+                this.file = ''	
             }
             this.files = this.files.filter(file => file[0]!=target.id)
 
@@ -294,7 +315,6 @@ export default {
                 currentGroup: this.currentGroup,
                 selectedObject: this.selectedObject,
                 file: this.file,
-                queryTarget: this.queryTarget,
                 opened: this.openedNodes,
             };
 
@@ -303,6 +323,19 @@ export default {
             window.electronAPI.requestSaveData(jsonString, this.vault+'/'+this.vault.split('/')[this.vault.split('/').length-1]+'.json')
 
         },
+        saveContents() {
+			/*if (this.file) {
+				var textContent = []
+				var lines = document.querySelectorAll('.line')
+				for (let i=0; i<lines.length; i++) {
+					textContent.push(lines[i].getAttribute('data-text')
+						//.replace('&nbsp;&nbsp;&nbsp;&nbsp;', '\t')
+						.replace(/\n$/, '')
+					)
+				}
+				window.electronAPI.requestSaveFile(this.file, textContent.join('\n'))
+			}*/
+		},
         async loadContents() {
             /*
             document.getElementById('text').innerHTML = ''
@@ -323,6 +356,186 @@ export default {
                 document.documentElement.style.setProperty('--line-count', document.querySelectorAll('.line').length.toString().length);
             }
             */
+        },
+        pushObjectToCurrentGroup(object, queryTarget) {
+            if (queryTarget===0) {
+                this.currentGroup.words.push(object)
+            }
+            if (queryTarget===1) {
+                this.currentGroup.connections.push(object)
+            }
+            if (queryTarget===2) {
+                this.currentGroup.categories.push(object)
+            }
+        },
+        deleteObject() {
+            if (this.selectedObject.objectType == 'Word') {
+                this.currentGroup.words.splice(this.currentGroup.words.indexOf(this.selectedObject), 1)
+                window.electronAPI.requestFileDeletion(this.selectedObject.file)
+
+                for (let i=0; i<this.selectedObject.categories.length;i++) {
+                    var category = this.getCategoryById(this.selectedObject.categories[i])
+                    category.words = category.words.filter(word => word!=this.selectedObject.id)
+                }
+                for (let i=0; i<this.selectedObject.connections.length;i++) {
+                    var connection = this.getConnectionById(this.selectedObject.connections[i][0])
+                    var word = this.getWordById(this.selectedObject.connections[i][1])
+
+                    connection.words = connection.words.filter(word => !word.includes(this.selectedObject.id))
+                    word.connections = word.connections.filter(connection => !connection.includes(this.selectedObject.id)) 
+                }
+                if (this.file==this.selectedObject.file) {
+                    this.files = this.files.filter(file => file[0]!=this.file)
+                    this.file = ''
+                }
+                if (this.fileQuery==this.selectedObject) {
+                    this.fileQuery = []
+                }
+            }
+            if (this.selectedObject.objectType == 'Connection') {
+                this.currentGroup.connections.splice(this.currentGroup.connections.indexOf(this.selectedObject), 1)
+                window.electronAPI.requestFileDeletion(this.selectedObject.file)
+
+                for (let i=0; i<this.selectedObject.categories.length;i++) {
+                    let category = this.getCategoryById(this.selectedObject.categories[i])
+                    category.connections = category.connectionsObj.filter(connection => connection!=this.selectedObject.id)
+                }
+                for (let i=0; i<this.selectedObject.words.length;i++) {
+                    var word1 = this.getWordById(this.selectedObject.words[i][0])
+                    var word2 = this.getWordById(this.selectedObject.words[i][1])
+
+                    word1.connections = word1.connections.filter(connection => !connection.includes(this.selectedObject.id))
+                    word2.connections = word2.connections.filter(connection => !connection.includes(this.selectedObject.id)) 
+                }
+                if (this.file==this.selectedObject.file) {
+                    this.files = this.files.filter(file => file[0]!=this.file)
+                    this.file = ''
+                }
+                if (this.fileQuery==this.selectedObject) {
+                    this.fileQuery = []
+                }
+            }
+            if (this.selectedObject.objectType == 'Category') {
+                this.currentGroup.categories.splice(this.currentGroup.categories.indexOf(this.selectedObject), 1)
+                window.electronAPI.requestFileDeletion(this.selectedObject.file)
+
+                for (let i=0; i<this.selectedObject.words.length;i++) {
+                    let word = this.getWordById(this.selectedObject.words[i])
+                    word.categories = word.categories.filter(category => category!=this.selectedObject.id)
+                }
+                for (let i=0; i<this.selectedObject.connectionsObj.length;i++) {
+                    let connection = this.getConnectionById(this.selectedObject.connections[i])
+                    connection.categories = connection.categories.filter(category => category!=this.selectedObject.id)
+                }
+                if (this.file==this.selectedObject.file) {
+                    this.files = this.files.filter(file => file[0]!=this.file)
+                    this.file = ''
+                }
+                if (this.fileQuery==this.selectedObject) {
+                    this.fileQuery = []
+                }
+            }
+            this.selectedObject = []
+            setTimeout(()=>{this.updateTreeDataview()}, 50)
+        },
+        setSelectedObject(object) {
+            this.selectedObject = object
+        },
+        async saveWordName(value) {
+            var wordTarget = this.getWordById(this.selectedObject.id)
+
+            document.querySelectorAll('.word').forEach(e => {
+                if (e.innerText == wordTarget.name) {
+                    e.innerText = value
+                }
+            })
+
+            if (document.getElementById(this.selectedObject.id)) {
+                document.getElementById(this.selectedObject.id).textContent = value
+            }
+
+            wordTarget.name = value
+
+            const message = await new Promise(resolve => {
+                window.electronAPI.requestChangeFileName(wordTarget.file, value)
+                window.electronAPI.response('change-filename-response', resolve)
+            })
+
+            if (wordTarget.file==this.file) {
+                this.file = message
+            }
+            this.files = this.files.map(tab => {
+            if (tab.includes(wordTarget.file)) {
+                return [this.file, this.file.split('/')[this.file.split('/').length-1]]
+            }
+            return tab; 
+            });
+
+
+            wordTarget.file = message
+
+            this.saveContents()
+            this.updateTreeDataview()
+        },
+        async saveConnectionName(value) {
+            var connectionTarget = this.getConnectionById(this.selectedObject.id)
+
+            document.querySelectorAll('.connection').forEach(e => {
+                if (e.innerText == connectionTarget.name) {
+                    e.innerText = value
+                }
+            })
+
+            if (document.getElementById(this.selectedObject.id)) {
+                document.getElementById(this.selectedObject.id).textContent = value
+            }
+
+            connectionTarget.name = value
+
+            const message = await new Promise(resolve => {
+                window.electronAPI.requestChangeFileName(connectionTarget.file, value)
+                window.electronAPI.response('change-filename-response', resolve)
+            })
+
+            if (connectionTarget.file==this.file) {
+                this.file = message
+            }
+            this.files = this.files.map(tab => {
+            if (tab.includes(connectionTarget.file)) {
+                return [this.file, this.file.split('/')[this.file.split('/').length-1]]
+            }
+            return tab; 
+            });
+
+            connectionTarget.file = message
+
+            this.saveContents()
+            this.updateTreeDataview()
+        },
+        async saveCategoryName(value) {
+            var categoryTarget = this.getCategoryById(this.selectedObject.id)
+
+            categoryTarget.name = value
+
+            const message = await new Promise(resolve => {
+                window.electronAPI.requestChangeFileName(categoryTarget.file, value)
+                window.electronAPI.response('change-filename-response', resolve)
+            })
+
+            if (categoryTarget.file==this.file) {
+                this.file = message
+            }
+            this.files = this.files.map(tab => {
+            if (tab.includes(categoryTarget.file)) {
+                return [this.file, this.file.split('/')[this.file.split('/').length-1]]
+            }
+            return tab; 
+            });
+
+            categoryTarget.file = message
+
+            this.saveContents()
+            this.updateTreeDataview()
         },
     },
 
@@ -361,6 +574,15 @@ export default {
         EventBus.$on('setFile', this.setFile);
         EventBus.$on('createTab', this.createTab);
 
+        EventBus.$on('pushObjectToCurrentGroup', this.pushObjectToCurrentGroup);
+        EventBus.$on('selectedObject', this.setSelectedObject)
+        EventBus.$on('deleteObject', this.deleteObject)
+
+        EventBus.$on('saveCategoryName', this.saveCategoryName);
+        EventBus.$on('saveConnectionName', this.saveConnectionName)
+        EventBus.$on('saveWordName', this.saveWordName)
+        EventBus.$on('openFile', this.openFile);
+
         const vaultMessage = await new Promise(resolve => {
             window.electronAPI.requestVaultData('vault-data')
             window.electronAPI.response("vault-name-response", vaultName => {
@@ -391,7 +613,7 @@ export default {
         this.activeItem = data.activeItem
         this.file = data.file
         this.openedNodes = data.opened
-        this.queryTarget = data.queryTarget}
+    }
     else {
 
         this.currentGroup = data.currentGroup
@@ -399,15 +621,14 @@ export default {
         this.activeItem = data.activeItem
         this.file = data.file
         this.openedNodes = data.opened
-
-        this.queryTarget = data.queryTarget}
+    }
 
     if (this.file) {
         this.files = [[this.file, this.file.split('/')[this.file.split('/').length-1]]]}
     else {
         this.files = []}
-
-    this.updateTreeDataview()
+        this.file = ''
+        this.updateTreeDataview()
     },
     watch: {
         currentGroup: {
@@ -449,12 +670,6 @@ export default {
                         this.fileQuery = []
                     }
                 }
-                this.saveMetaData();
-            }
-        },
-        queryTarget: {
-            deep: true,
-            handler() {
                 this.saveMetaData();
             }
         },
@@ -1608,7 +1823,6 @@ border: 1px solid #628DD0;
     border-radius: 5px;
     z-index: 101;
     background: rgba(45, 45, 45);
-    outline: 1px solid rgb(8, 8, 8);
     height: fit-content;
     padding: 3px;
     display: flex;

@@ -15,6 +15,7 @@
                             mdi-help-circle-outline
                         </v-icon>
                     </v-btn>
+                    
                     <v-btn small icon dense>
                         <v-icon size="20" color="secondary" @click="openSettings">
                             mdi-cog-outline
@@ -67,7 +68,6 @@
         name: 'SideBar',
         data: () => ({
             treeViewOpened: true,
-            showUserHelp: false,
             clickMenu: {
                 opened: false,
                 x: 0,
@@ -93,7 +93,7 @@
                 window.electronAPI.exitVault()
             },
             userHelp() {
-                this.showUserHelp = !this.showUserHelp
+
             },
             openSettings() {
 

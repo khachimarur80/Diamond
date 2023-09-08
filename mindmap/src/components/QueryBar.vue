@@ -18,7 +18,7 @@
                     </div>
                     <div class="query-display-contents">
                         <div>
-                            <div v-for="word in currentGroup.words" :key="word" @click="selectedObject=word" :style="{ color: word==selectedObject ? '#43A047' : '#fff' }">
+                            <div v-for="word in currentGroup.words" :key="word.file" @click="selectedObject=word" :style="{ color: word==selectedObject ? '#43A047' : '#fff' }">
                                 {{word.name}}
                             </div>
                         </div>
@@ -30,7 +30,7 @@
                         <v-btn icon small @click="newObject"><v-icon>mdi-plus</v-icon></v-btn>
                     </div>
                     <div class="query-display-contents">
-                        <div v-for="connection in currentGroup.connections" :key="connection" @click="selectedObject=connection"
+                        <div v-for="connection in currentGroup.connections" :key="connection.file" @click="selectedObject=connection"
                         :style="{ color: connection==selectedObject ? '#1976D2' : '#fff' }">
                             {{connection.name}}
                         </div>
@@ -42,7 +42,7 @@
                         <v-btn icon small @click="newObject"><v-icon>mdi-plus</v-icon></v-btn>
                     </div>
                     <div class="query-display-contents">
-                        <div v-for="group in currentGroup.categories" :key="group" @click="selectedObject=group" :style="{ color: group==selectedObject ? '#EF5350' : '#fff' }">
+                        <div v-for="group in currentGroup.categories" :key="group.file" @click="selectedObject=group" :style="{ color: group==selectedObject ? '#EF5350' : '#fff' }">
                             {{group.name}}
                         </div>
                     </div>
@@ -55,11 +55,11 @@
                     </div>
                     <div class="query-list">
                         <v-icon color="red">mdi-pound</v-icon>
-                        <span v-for="category in selectedObject.categories" :key="category">{{ getCategoryById(category).name }}</span>
+                        <span v-for="category in selectedObject.categories" :key="category.file">{{ getCategoryById(category).name }}</span>
                     </div>
                     <div class="query-list">
                         <v-icon color="blue">mdi-transit-connection-horizontal</v-icon>
-                        <div v-for="connection in selectedObject.connections"  :key="connection" class="relation-table">
+                        <div v-for="connection in selectedObject.connections"  :key="connection.file" class="relation-table">
                             <span>{{ getConnectionById(connection[0]).name }}</span>
                             <v-icon>mdi-arrow-left-right</v-icon>
                             <span v-if="connection[1]">{{ getWordById(connection[1]).name }}</span>
@@ -152,11 +152,54 @@
     </div>
 </template>
 <script>
+    import EventBus from '@/event-bus'
+
+    class Word {
+        constructor() {
+            this.id = Math.floor(Math.random()*100000)
+            this.name = ""
+            this.x = 100
+            this.y = 100
+            this.objectType = "Word"
+            this.file = ""
+            this.connections = []
+            this.categories = []
+            this.instances = {}
+        }
+    }
+
+    class Connection {
+        constructor() {
+            this.id = Math.floor(Math.random()*100000) 
+            this.name = "Connection "+this.id
+            this.objectType = "Connection"
+            this.file = ""
+            this.categories = []
+            this.connections = []
+            this.instances = {}
+            this.directionality = 'lr'
+            this.upgrade = false
+        }
+    }
+
+    class Category {
+        constructor() {
+            this.id = Math.floor(Math.random()*100000) 
+            this.name = "Category "+this.id
+            this.objectType = "Category"
+            this.file = ""
+            this.words = []
+            this.connectionsObj = []
+            this.connections = []
+        }
+    }
+
     export default {
         name: 'QueryBar',
         data: () => ({
             queryTarget: null,
             selectedObject: null,
+            newName: '',
         }),
         props: {
             currentGroup : {
@@ -166,13 +209,98 @@
         },
         methods: {
             scrollQuery() {
-
+                if (this.queryTarget!=null) {
+                    this.queryTarget = (this.queryTarget+1)%3
+                }
+                else {
+                    this.queryTarget = 0
+                }
             },
-            newObject() {
+            async newObject() {
+                if (this.queryTarget==0) {
+                    var newWord = new Word()
+                    newWord.name = '#'+newWord.id
+                    this.selectedObject = newWord
+                    EventBus.$emit('pushObjectToCurrentGroup', newWord, this.queryTarget)
 
+                    let message = await new Promise(resolve => {
+                        window.electronAPI.requestLoadWord(this.currentGroup.file, newWord.name)
+                        window.electronAPI.response('load-word-response', resolve)
+                    });
+
+                    newWord.file = message
+
+                    this.updateTreeDataview()
+                }
+                else if (this.queryTarget==1) {
+                    var newConnection = new Connection()
+                    newConnection.name = '#'+newConnection.id
+                    this.selectedObject = newConnection
+                    EventBus.$emit('pushObjectToCurrentGroup', newWord, this.queryTarget)
+                    
+                    let message = await new Promise(resolve => {
+                        window.electronAPI.requestLoadConnection(this.currentGroup.file, newConnection.name)
+                        window.electronAPI.response('load-connection-response', resolve)
+                    })
+
+                    newConnection.file = message
+
+                    this.updateTreeDataview()
+                }
+                else if (this.queryTarget==2) {
+                    var newCategory = new Category()
+                    newCategory.name = '#'+newCategory.id
+                    this.selectedObject = newCategory
+                    EventBus.$emit('pushObjectToCurrentGroup', newWord, this.queryTarget)
+                    
+                    let message = await new Promise(resolve => {
+                        window.electronAPI.requestLoadCategory(this.currentGroup.file, newCategory.name)
+                        window.electronAPI.response('load-category-response', resolve)
+                    })
+
+                    newCategory.file = message
+
+                    this.updateTreeDataview()
+                }
             },
+            async saveWordName() {
+                var value = this.newName
+                EventBus.$emit('saveWordName', value)
+            },
+            async saveConnectionName() {
+                var value = this.newName
+                EventBus.$emit('saveConnectionName', value)
+            },
+            async saveCategoryName() {
+                var value = document.getElementById('selectedCategoryName').value
+                EventBus.$emit('saveConnectionName', value)
+            },
+            openFile() {
+                EventBus.$emit('openFile')
+            },
+            deleteObject() {
+                EventBus.$emit('deleteObject')
+            }
         },
         async created () {
+        },
+        watch: {
+            selectedObject: {
+                handler() {
+                    if (this.selectedObject) {
+                        this.newName = this.selectedObject.name
+                    }
+                    EventBus.$emit('selectedObject', this.selectedObject)
+                }
+            },
+        },
+        computed: {
+            canSave() {
+                if (this.newName!=this.selectedObject.name) {
+                    return true
+                }
+                return false
+            },
         }
     }
 </script>
