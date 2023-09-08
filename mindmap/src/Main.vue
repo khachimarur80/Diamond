@@ -68,9 +68,54 @@ export default {
         flag: true,
     },
     vault: '',
+    navigated: [],
     }),
 
     methods: {
+        toggleSidebar() {
+            this.sidebar.flag = !this.sidebar.flag
+            const sidebar = document.getElementById('sidebar');
+            const sidebarResize = document.getElementById('resizeBarLeft');
+
+            if (this.sidebar.flag) {
+                sidebar.style.display = 'block'
+                sidebar.style.marginLeft = '0px';
+                sidebar.firstElementChild.style.flexDirection = "row";
+                document.getElementById('sidebar-title-bar').style.width = this.sidebar.width + 'px'
+                setTimeout(()=>{
+                    document.getElementById('sidebar-title-bar').style.transition = ""
+                    sidebarResize.style.display = 'block'
+                }, 200)
+            }
+            else {
+                sidebar.style.marginLeft= '-' + (sidebar.getBoundingClientRect().width - 40) + 'px';
+                sidebar.firstElementChild.style.flexDirection = "row-reverse";
+                sidebarResize.style.display = 'none'
+                document.getElementById('sidebar-menu').marginRight = '0px'
+                document.getElementById('sidebar-title-bar').style.transition = 'width .15s'
+                document.getElementById('sidebar-title-bar').style.width = "120px"
+            }
+        },
+        toggleQueries() {
+            this.queries.flag = !this.queries.flag
+            const queries = document.getElementById('queries');
+            const queriesResize = document.getElementById('resizeBarRight');
+
+            if (this.queries.flag) {
+                queries.style.display = 'block'
+                queries.style.marginRight = '0px';
+                queriesResize.style.display = 'block'
+                setTimeout(()=>{
+                    document.getElementById('queries-title-bar').style.transition = ''
+                }, 200)
+            }
+            else {
+                document.getElementById('queries-title-bar').style.width = '40px'
+                document.getElementById('queries-title-bar').style.transition = 'width .15s'
+                queries.style.marginRight = '-' + (queries.getBoundingClientRect().width ) + 'px';
+                queriesResize.style.display = 'none'
+            }
+        },
         get_open(nodes) {
             let opened_nodes = []
             for (const node of nodes) {
@@ -163,6 +208,19 @@ export default {
                 this.files = [...new Set(this.files)];
             }
         },
+        removeFile(file) {
+            for (let i=0; i<this.files.length; i++) {
+                if (this.files[i]==file) {
+                    if (file[0]==this.file) {
+                        this.file = null
+                    }
+                    this.files.splice(i, 1)
+                }
+            }
+        },
+        setFile(file) {
+            this.file = file[0]
+        },
         moveFile(origin, destiny) {
             window.electronAPI.moveFileRequest(origin, destiny)
             setTimeout(()=>{this.updateTreeDataview()}, 100)
@@ -208,7 +266,64 @@ export default {
                 return false;
             }
             removeNodeFromTree(this.treeDataView, target.id)
-        }
+        },
+        async createTab() {
+            if (this.file) {
+                const message = await new Promise(resolve => {
+                    window.electronAPI.createFile(this.file)
+                    window.electronAPI.response('create-file-response', resolve)
+                });
+                this.file = message
+                this.files.push([this.file, this.file.split('/')[this.file.split('/').length-1]])
+                this.files = [...new Set(this.files)];
+                this.updateTreeDataview()
+            }
+            else {
+                const message = await new Promise(resolve => {
+                    window.electronAPI.createFile(this.vault)
+                    window.electronAPI.response('create-file-response', resolve)
+                });
+                this.file = message
+                this.files.push([this.file, this.file.split('/')[this.file.split('/').length-1]])
+                this.files = [...new Set(this.files)];
+                this.updateTreeDataview()
+            }
+        },
+        saveMetaData() {
+            const jsonData = {
+                currentGroup: this.currentGroup,
+                selectedObject: this.selectedObject,
+                file: this.file,
+                queryTarget: this.queryTarget,
+                opened: this.openedNodes,
+            };
+
+            const jsonString = JSON.stringify(jsonData)
+
+            window.electronAPI.requestSaveData(jsonString, this.vault+'/'+this.vault.split('/')[this.vault.split('/').length-1]+'.json')
+
+        },
+        async loadContents() {
+            /*
+            document.getElementById('text').innerHTML = ''
+            this.textViewMode = 'edit'
+            const message = await new Promise(resolve => {
+                window.electronAPI.requestFileData(this.file)
+                window.electronAPI.response("file-data-response", resolve)
+            })
+            if (typeof message != 'string') {
+                this.files = this.files.filter(file => file[0]!=this.file)
+            }
+            else {
+                for (let i=0; i<message.split('\n').length; i++) {
+                    var newLine = this.createLine(message.split('\n')[i])
+                    this.renderMarkdown(newLine)
+                    document.getElementById('text').appendChild(newLine)
+                }
+                document.documentElement.style.setProperty('--line-count', document.querySelectorAll('.line').length.toString().length);
+            }
+            */
+        },
     },
 
     mounted() {
@@ -238,6 +353,13 @@ export default {
         EventBus.$on('createFolder', this.createFolder);
         EventBus.$on('toggleTreeview', this.toggleTreeview);
         EventBus.$on('removeNodeFile', this.removeNodeFile);
+
+        EventBus.$on('toggleSidebar', this.toggleSidebar);
+        EventBus.$on('toggleQueries', this.toggleQueries);
+
+        EventBus.$on('removeFile', this.removeFile);
+        EventBus.$on('setFile', this.setFile);
+        EventBus.$on('createTab', this.createTab);
 
         const vaultMessage = await new Promise(resolve => {
             window.electronAPI.requestVaultData('vault-data')
@@ -286,6 +408,78 @@ export default {
         this.files = []}
 
     this.updateTreeDataview()
+    },
+    watch: {
+        currentGroup: {
+            deep: true,
+            handler() {
+                this.saveMetaData()
+            }
+        },
+        selectedObject: {
+            deep: true,
+            handler() {
+                if (this.selectedObject) {
+                    this.newName = this.selectedObject.name
+                    this.saveMetaData();
+                }
+            }
+        },
+        file: {
+            deep: true,
+            handler() {
+                if (this.file) {
+                    if (!this.navigated) {
+                        this.fileHistory.push(this.file)
+                    }
+                    else {
+                        this.navigated = false
+                    }
+                    this.loadContents()
+                    if (this.file.includes('/words/')) {
+                        this.fileQuery = this.currentGroup.words.filter((e)=> e.file==this.file)[0]
+                    }
+                    else if (this.file.includes('/connections/')) {
+                        this.fileQuery = this.currentGroup.connections.filter((e)=> e.file==this.file)[0]
+                    }
+                    else if (this.file.includes('/categories/')) {
+                        this.fileQuery = this.currentGroup.categories.filter((e)=> e.file==this.file)[0]
+                    }
+                    if (!this.fileQuery) {
+                        this.fileQuery = []
+                    }
+                }
+                this.saveMetaData();
+            }
+        },
+        queryTarget: {
+            deep: true,
+            handler() {
+                this.saveMetaData();
+            }
+        },
+        treeDataView: {
+            deep: true,
+            handler() {
+                let  opened_nodes = []
+                    this.openedNodes = []
+
+                    function get_open(nodes) {
+                for (const node of nodes) {
+                    if (node.open) {
+                    opened_nodes.push(node.id)
+                    }
+                    if (node.children && node.children.length) {
+                    get_open(node.children);
+                    }
+                }
+                }
+                get_open(this.treeDataView)
+                this.openedNodes = opened_nodes
+
+                this.saveMetaData()
+                }
+        }
     },
 };
 </script>
@@ -403,7 +597,7 @@ background: var(--main-bg);
     display: flex;
     height: 32px;
     justify-content: center;
-    align-items: start;
+    align-items: flex-start;
     border-radius: 9px 9px 0px 0px;
     padding-top: 3px;
     padding-left: 3px;
@@ -1126,7 +1320,7 @@ text-overflow: ellipsis;
     height: 35px;
     display: flex;
     align-items: center;
-    justify-content: start;
+    justify-content: flex-start;
 }
 #text-toolbar {
     display: flex;
@@ -1195,7 +1389,7 @@ text-overflow: ellipsis;
 height: 20px;
 width: fit-content;
 display: flex;
-justify-content: end;
+justify-content: flex-end;
 align-items: center;
 user-select: none;
 pointer-events: none;
@@ -1427,7 +1621,7 @@ border: 1px solid #628DD0;
     display: flex;
     padding-left: 10px;
     color: #B9B9B9;
-    justify-content: start;
+    justify-content: flex-start;
     align-items: center;
     border-radius: 3px;
 }

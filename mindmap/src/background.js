@@ -140,6 +140,7 @@ function createVaultWindow(devPath, prodPath) {
   const window = new BrowserWindow({
     width: 800,
     height: 600,
+    backgroundColor: '#262626',
     frame: false,
     webPreferences: {
       // Use pluginOptions.nodeIntegration, leave this alone
@@ -320,7 +321,7 @@ app.on('ready', async () => {
     vaultWindow.webContents.send('vault-creation-response', {name: vaultName, id: vaultPath});
   });
 
-  ipcMain.on('open-vault', async (event, vaultName) => {
+  ipcMain.on('open-vault', (event, vaultName) => {
     console.log("Opening vault "+vaultName+"!\n")
     currentVault = vaultName
     if (vaultWindow) {
@@ -346,7 +347,9 @@ app.on('ready', async () => {
     const window = BrowserWindow.fromWebContents(event.sender);
     if (window) {
       window.close();
-      app.quit()
+      if (!mainWindow && !vaultWindow) {
+        //app.quit()
+      }
     }
   });
 
@@ -439,8 +442,12 @@ ipcMain.on('request-change-filename', (event, targetFile, value) => {
 
   ipcMain.on('exit-vault', (event, vaultName) => {
     console.log("Opening vault menu!")
-
-    vaultWindow = createVaultWindow('', 'index.html')
+    if (!vaultWindow) {
+      vaultWindow = createVaultWindow('', 'index.html')
+    }
+    else {
+      vaultWindow.focus()
+    }
   });
 
   ipcMain.on('open-file-browser', (event) => {

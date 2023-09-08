@@ -41,7 +41,7 @@
                     </div>
                 </div>
                 <div class="create-tab-btn">
-                    <v-btn dense icon x-small color="secondary" style="margin-bottom: -3px; -webkit-app-region: no-drag;" @click="createTab">
+                    <v-btn dense icon x-small color="#ccc" style="margin-bottom: -3px; -webkit-app-region: no-drag;" @click="createTab">
                         <v-icon size="20">
                             mdi-plus
                         </v-icon>
@@ -60,7 +60,8 @@
 </template>
 
 <script>
-  
+  import EventBus from '../event-bus.js';
+
   export default {
     name: 'TitleBar',
     
@@ -84,66 +85,28 @@
   
     methods: {
         createTab() {
-
+            EventBus.$emit('createTab')
         },
         toggleSidebar() {
-            this.sidebar.flag = !this.sidebar.flag
-            const sidebar = document.getElementById('sidebar');
-            const sidebarResize = document.getElementById('resizeBarLeft');
-
-            if (this.sidebar.flag) {
-                sidebar.style.display = 'block'
-                sidebar.style.marginLeft = '0px';
-                sidebar.firstElementChild.style.flexDirection = "row";
-                document.getElementById('sidebar-title-bar').style.width = this.sidebar.width + 'px'
-                setTimeout(()=>{
-                    document.getElementById('sidebar-title-bar').style.transition = ""
-                    sidebarResize.style.display = 'block'
-                }, 200)
-            }
-            else {
-                sidebar.style.marginLeft= '-' + (sidebar.getBoundingClientRect().width - 40) + 'px';
-                sidebar.firstElementChild.style.flexDirection = "row-reverse";
-                sidebarResize.style.display = 'none'
-                document.getElementById('sidebar-menu').marginRight = '0px'
-                document.getElementById('sidebar-title-bar').style.transition = 'width .15s'
-                document.getElementById('sidebar-title-bar').style.width = "120px"
-            }
+            EventBus.$emit('toggleSidebar')
         },
         toggleQueries() {
-            this.queries.flag = !this.queries.flag
-            const queries = document.getElementById('queries');
-            const queriesResize = document.getElementById('resizeBarRight');
-
-            if (this.queries.flag) {
-                queries.style.display = 'block'
-                queries.style.marginRight = '0px';
-                queriesResize.style.display = 'block'
-                setTimeout(()=>{
-                    document.getElementById('queries-title-bar').style.transition = ''
-                }, 200)
-            }
-            else {
-                document.getElementById('queries-title-bar').style.width = '40px'
-                document.getElementById('queries-title-bar').style.transition = 'width .15s'
-                queries.style.marginRight = '-' + (queries.getBoundingClientRect().width ) + 'px';
-                queriesResize.style.display = 'none'
-            }
+            EventBus.$emit('toggleQueries')
         },
-        removeFile() {
-
+        removeFile(file) {
+            EventBus.$emit('removeFile', file)
         },
-        setFile() {
-
+        setFile(file) {
+            EventBus.$emit('setFile', file)
         },
         closeWindow() {
-
+            window.electronAPI.closeWindow()
         },
         minimizeWindow() {
-
+            window.electronAPI.minimizeWindow()
         },
         expandWindow() {
-
+            window.electronAPI.expandWindow()
         },
     },
   

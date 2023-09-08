@@ -67,6 +67,7 @@
         name: 'SideBar',
         data: () => ({
             treeViewOpened: true,
+            showUserHelp: false,
             clickMenu: {
                 opened: false,
                 x: 0,
@@ -92,7 +93,7 @@
                 window.electronAPI.exitVault()
             },
             userHelp() {
-
+                this.showUserHelp = !this.showUserHelp
             },
             openSettings() {
 
