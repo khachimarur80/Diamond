@@ -127,7 +127,6 @@ function createMainWindow(devPath, prodPath) {
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + devPath)
-    if (!process.env.IS_TEST) window.webContents.openDevTools()
   } else {
     // Load the index.html when not in development
     window.loadURL(`app://./${prodPath}`)
@@ -153,7 +152,6 @@ function createVaultWindow(devPath, prodPath) {
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + devPath)
-    if (!process.env.IS_TEST) window.webContents.openDevTools()
   } else {
     // Load the index.html when not in development
     window.loadURL(`app://./${prodPath}`)
