@@ -5,7 +5,7 @@
         <div id="app-contents">
         <SideBar :items="treeDataView" :vault="vault" @createFile="createFile"></SideBar>
         <div id="body">
-            <TextEditor :file="file" :currentGroup="currentGroup"></TextEditor>
+            <TextEditor ref="textEditor" :file="file" :currentGroup="currentGroup"></TextEditor>
             <QueryView></QueryView>
         </div>
         <QueryBar :currentGroup="currentGroup"></QueryBar>
@@ -333,6 +333,7 @@ export default {
             if (queryTarget===2) {
                 this.currentGroup.categories.push(object)
             }
+            this.updateTreeDataview()
         },
         pushConnectionToCurrentGroup(object) {
             this.currentGroup.connections.push(object)
@@ -509,6 +510,22 @@ export default {
             this.saveContents()
             this.updateTreeDataview()
         },
+        saveContents() {
+			if (this.file) {
+				var textContent = []
+				var lines = document.querySelectorAll('.line')
+				for (let i=0; i<lines.length; i++) {
+					textContent.push(lines[i].getAttribute('data-text')
+						//.replace('&nbsp;&nbsp;&nbsp;&nbsp;', '\t')
+						.replace(/\n$/, '')
+					)
+				}
+				window.electronAPI.requestSaveFile(this.file, textContent.join('\n'))
+			}
+		},
+        setHistory(file) {
+            this.file = file
+        },
     },
 
     mounted() {
@@ -556,6 +573,8 @@ export default {
         EventBus.$on('saveConnectionName', this.saveConnectionName)
         EventBus.$on('saveWordName', this.saveWordName)
         EventBus.$on('openFile', this.openFile);
+
+        EventBus.$on('setHistory', this.setHistory)
 
         const vaultMessage = await new Promise(resolve => {
             window.electronAPI.requestVaultData('vault-data')
@@ -624,12 +643,6 @@ export default {
             deep: true,
             handler() {
                 if (this.file) {
-                    if (!this.navigated) {
-                        this.fileHistory.push(this.file)
-                    }
-                    else {
-                        this.navigated = false
-                    }
                     if (this.file.includes('/words/')) {
                         this.fileQuery = this.currentGroup.words.filter((e)=> e.file==this.file)[0]
                     }

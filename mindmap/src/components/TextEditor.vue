@@ -17,7 +17,7 @@
                     mdi-pencil-outline
                 </v-icon>
                 <v-icon v-if="textViewMode=='edit'" size="20">
-                    mdi-book-open-blank-letiant
+                    mdi-book-open-blank-variant
                 </v-icon>
             </v-btn>
         </div>
@@ -328,7 +328,17 @@
             },
         },
         methods: {
-            getWordById(id) {
+            setHistory(direction) {
+                this.historyIndex += direction
+                this.navigated = true
+                if (undefined == this.fileHistory[this.historyIndex]) {
+                    EventBus.$emit('setHistory', '')
+                }
+                else {
+                    EventBus.$emit('setHistory', this.fileHistory[this.historyIndex])
+                }
+            },
+             getWordById(id) {
                 for(let i=0; i<this.currentGroup.words.length; i++) {
                     if (this.currentGroup.words[i].id==id) {
                         return this.currentGroup.words[i]
@@ -659,7 +669,7 @@
                 let lineCollapse = document.createElement('div')
                 lineCollapse.classList.add('line-collapse')
                 lineCollapse.innerHTML = '<i aria-hidden="true" class="v-icon notranslate mdi mdi-chevron-down theme--dark" style="font-size: 16px"></i>'
-        lineCollapseContainer.appendChild(lineCollapse)
+                lineCollapseContainer.appendChild(lineCollapse)
 
                 let lineContents = document.createElement('div')
                 lineContents.classList.add('line-contents')
@@ -680,17 +690,17 @@
                     document.querySelectorAll('.active-instance').forEach(e => e.classList.remove('active-instance'))
                 }
                 const selection = window.getSelection();
-        selection.removeAllRanges();
+                selection.removeAllRanges();
 
                 this.autocomplete.word = null
                 let target = event.target
                 if (target.classList.contains('word')) {
                     let wordObj = this.getWordById(target.getAttribute('data-id'))
-                    this.selectedObject = wordObj
+                    EventBus.$emit('setSelectedObject', wordObj)
                 }
                 else if (target.classList.contains('connection')) {
                     let connectionObj = this.getConnectionById(target.getAttribute('data-id'))
-                    this.selectedObject = connectionObj
+                    EventBus.$emit('setSelectedObject', connectionObj)
                 }
                 else {
                     while (!target.classList.contains('line')) {

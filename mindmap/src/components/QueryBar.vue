@@ -221,7 +221,6 @@
                     var newWord = new Word()
                     newWord.name = '#'+newWord.id
                     this.selectedObject = newWord
-                    EventBus.$emit('pushObjectToCurrentGroup', newWord, this.queryTarget)
 
                     let message = await new Promise(resolve => {
                         window.electronAPI.requestLoadWord(this.currentGroup.file, newWord.name)
@@ -230,13 +229,12 @@
 
                     newWord.file = message
 
-                    this.updateTreeDataview()
+                    EventBus.$emit('pushObjectToCurrentGroup', newWord, this.queryTarget)
                 }
                 else if (this.queryTarget==1) {
                     var newConnection = new Connection()
                     newConnection.name = '#'+newConnection.id
                     this.selectedObject = newConnection
-                    EventBus.$emit('pushObjectToCurrentGroup', newWord, this.queryTarget)
                     
                     let message = await new Promise(resolve => {
                         window.electronAPI.requestLoadConnection(this.currentGroup.file, newConnection.name)
@@ -245,13 +243,12 @@
 
                     newConnection.file = message
 
-                    this.updateTreeDataview()
+                    EventBus.$emit('pushObjectToCurrentGroup', newConnection, this.queryTarget)
                 }
                 else if (this.queryTarget==2) {
                     var newCategory = new Category()
                     newCategory.name = '#'+newCategory.id
                     this.selectedObject = newCategory
-                    EventBus.$emit('pushObjectToCurrentGroup', newWord, this.queryTarget)
                     
                     let message = await new Promise(resolve => {
                         window.electronAPI.requestLoadCategory(this.currentGroup.file, newCategory.name)
@@ -260,7 +257,7 @@
 
                     newCategory.file = message
 
-                    this.updateTreeDataview()
+                    EventBus.$emit('pushObjectToCurrentGroup', newCategory, this.queryTarget)
                 }
             },
             async saveWordName() {
@@ -280,9 +277,14 @@
             },
             deleteObject() {
                 EventBus.$emit('deleteObject')
+                this.selectedObject = null
+            },
+            setSelectedObject(object) {
+                this.selectedObject = object
             }
         },
         async created () {
+            EventBus.$on('setSelectedObject', this.setSelectedObject)
         },
         watch: {
             selectedObject: {
