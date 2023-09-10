@@ -36,6 +36,7 @@
 </template>
 
 <script>
+  //Panel where list of vaults is displayed
   export default {
     name: 'VaultPanel',
 
@@ -46,9 +47,10 @@
       },
     },
 
-    methods: { 
+    methods: {
+      //System function actions for titlebar
       closeWindow() {
-      window.electronAPI.closeWindow()
+        window.electronAPI.closeWindow()
       },
       minimizeWindow() {
         window.electronAPI.minimizeWindow()
@@ -56,6 +58,7 @@
       openVault(vault) {
         window.electronAPI.openVault(vault.id)
       },
+      //Vault removal function that is passed to parent
       removeVault(vault) {
         this.$emit('removeVault', vault)
       },

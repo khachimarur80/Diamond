@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  //Different request for data and actions from renderer to background.js
   requestTreeData: (vaultName) => ipcRenderer.send('request-tree-data', vaultName),
   requestFileData: (fileName) => ipcRenderer.send('request-file-data', fileName),
   requestSaveData: (jsonData, vaultName) => ipcRenderer.send('request-save-data', jsonData, vaultName),
@@ -18,6 +19,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   expandWindow: () => ipcRenderer.send('expand-window'),
   createFile: (directory) => ipcRenderer.send('create-file', directory),
   createFolder: (directory) => ipcRenderer.send('create-folder', directory),
+  exitVault: () => ipcRenderer.send('exit-vault'),
+  openFileBrowser: () => ipcRenderer.send('open-file-browser'),
+  moveFileRequest: (filepath, destinypath) => ipcRenderer.send('move-file-request', filepath, destinypath),
+  pathValid: (path) => ipcRenderer.send('path-valid', path),
+  requestVaultData: () => ipcRenderer.send('vault-data'),
+
+  //One function for all background.js responses for rendere process
   response: (channel, listener) => {
     const onceListener = (event, ...args) => {
       ipcRenderer.removeListener(channel, onceListener);
@@ -26,11 +34,4 @@ contextBridge.exposeInMainWorld('electronAPI', {
     
     ipcRenderer.on(channel, onceListener);
   },
-  exitVault: () => ipcRenderer.send('exit-vault'),
-  openFileBrowser: () => ipcRenderer.send('open-file-browser'),
-  moveFileRequest: (filepath, destinypath) => ipcRenderer.send('move-file-request', filepath, destinypath),
-  pathValid: (path) => ipcRenderer.send('path-valid', path),
-  requestVaultData: () => ipcRenderer.send('vault-data')
 })
-
-//ipcRenderer.on(channel, (event, ...args) => listener(...args))

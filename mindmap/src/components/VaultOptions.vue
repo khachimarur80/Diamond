@@ -58,15 +58,16 @@
 </template>
 
 <script>
+  //Panel where actions you can perform on vaults are displayed
   export default {
     name: 'VaultOptions',
 
     data: () => ({
-      waiting: false,
-      newVaultName: null,
-      newVaultLocation: null,
-      errorMessage: false,
-      createVault: false,
+      waiting: false, //Shows progress circular while loading fileBrowser dialog
+      newVaultName: null, //Temporary storage of name for newVault creation
+      newVaultLocation: null, //Temporary storage of location for newVault creation
+      errorMessage: false, //Error message to display when vault creation missing data
+      createVault: false, //Flag to show vault creation dialog
     }),
 
     props: {
@@ -79,40 +80,51 @@
     methods: { 
       async createVaultFunc() {
         if (this.newVaultLocation && this.newVaultName) {
+          //Remove dialog for vault creation
           this.createVault = false
-
+          //Vault creation request that returns the new vault path and name
           const message = await new Promise(resolve => {
             window.electronAPI.createNewVault(this.newVaultName, this.newVaultLocation)
             window.electronAPI.response('vault-creation-response', resolve)
           });
-
+          //Add newly created vault to Vault.vue vaults prop
           this.$emit('addVault', message)
-          console.log(message)
+          //Update stored vaults in localStorage
           window.localStorage.setItem('vaults', JSON.stringify(this.vaults))
         }
         else {
+          //Show error message for invalid input
           this.errorMessage = "Please provide a name and a location.";
+          //Remove error message after some time
           setTimeout(()=>{
             this.errorMessage = null
           }, 2000)
         }
       },
       async openVault() {
+        //Set progress circular while loading fileBrowser
         this.waiting = true
         const message = await new Promise(resolve => {
           window.electronAPI.openFileBrowser()
           window.electronAPI.response('open-file-browser-response', resolve)
+          //Remove progress circular when fileBrowser obtained
           this.waiting = false
         });
+        //Add selected directory as vault
         this.$emit('addVault', message)
+        //Update stored vaults in localStorage
+        window.localStorage.setItem('vaults', JSON.stringify(this.vaults))
       },
       async openFileBrowser() {
+        //Set progress circular while loading fileBrowser
         this.waiting = true
         const message = await new Promise(resolve => {
           window.electronAPI.openFileBrowser()
           window.electronAPI.response('open-file-browser-response', resolve)
+          //Remove progress circular when fileBrowser obtained
           this.waiting = false
         });
+        //Set temporary storage of location for newVault creation
         this.newVaultLocation = message
       },
     },
