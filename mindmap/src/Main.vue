@@ -15,63 +15,65 @@
 </template>
     
 <script>
+
+//Class that represents a given vault and stores all data
+//Could be seen as the Vault object
 class Group {
     constructor() {
-    this.id = Math.floor(Math.random()*100000)
-    this.name = Math.floor(Math.random()*100000).toString()
-    this.words = []
-    this.connections = []
-    this.groups = []
-    this.x = 0
-    this.y = 0
-    this.width = 0
-    this.height = 0
-    this.objectType = "Group"
-    this.file = ""
-    this.categories = []
+        this.id = Math.floor(Math.random()*100000)
+        this.name = Math.floor(Math.random()*100000).toString()
+        this.words = []
+        this.connections = []
+        this.groups = []
+        this.objectType = "Group"
+        this.file = ""
+        this.categories = []
     }
 }
 
-
+//Components
 import SideBar from './components/SideBar';
 import QueryBar from './components/QueryBar';
 import TitleBar from './components/TitleBar';
 import TextEditor from './components/TextEditor';
 import QueryView from './components/QueryView';
 
+//Vue instance used for comunication between vue components in the app
 import EventBus from './event-bus.js';
 
 export default {
     name: 'MainWin',
 
     components: {
-    SideBar,
-    QueryBar,
-    TitleBar,
-    TextEditor,
-    QueryView,
+        SideBar,
+        QueryBar,
+        TitleBar,
+        TextEditor,
+        QueryView,
     },
     
-
     data: () => ({
-        treeDataView: [],
+        treeDataView: [], //Stores directory structure of current vault
         currentGroup: null,
-        selectedObject: [],
-        files: [],
-        file: '',
-        activeItem: null,
-        openedNodes: [],
+        selectedObject: [], //Stores selected object for QueryBar.vue
+        files: [], //Stores the opened files for tabs in TitleBar.vue
+        file: '', //Stores current active file for active tab
+        activeItem: null, //NO IDEA
+        openedNodes: [], //List of directories in TreeView.vue that are opened
         sidebar: {
-            flag: true,
+            flag: true, //Flag for sidebar width sync the sidebar part in titlebar
         },
         queries: {
-            flag: true,
+            flag: true,  //Flag for querybar width sync the querybar part in titlebar
         },
-        vault: '',
-        navigated: [],
+        vault: '', //Current vault name
+        navigated: [], //History of opened files
     }),
 
     methods: {
+        // ------------------------------------------ GLOBAL METHODS ------------------------------------------ //
+
+        //Functions to obtain objects by their ID
         getWordById(id) {
             for(let i=0; i<this.currentGroup.words.length; i++) {
                 if (this.currentGroup.words[i].id==id) {
@@ -93,7 +95,105 @@ export default {
                 }
             }
         },
+        openFile(file) {
+            if (typeof file === "string") {
+                this.file = file
+            }
+            else {
+                this.file = this.selectedObject.file
+            }
+
+            let addFile = true
+            this.files.forEach((file) => {
+                if (this.file == file[0]) {
+                    addFile = false
+                }
+            })
+
+            if (addFile) {
+                this.files.push([this.file, this.file.split('/')[this.file.split('/').length-1]])
+                this.files = [...new Set(this.files)];
+            }
+        },
+        //Function to get current opened nodes for TreeView.vue
+        get_open(nodes) {
+            let opened_nodes = []
+            for (const node of nodes) {
+            if (node.open) {
+                opened_nodes.push(node.id)
+            }
+            if (node.children && node.children.length) {
+                this.get_open(node.children);
+            }
+            }
+            return opened_nodes
+        },
+        //Given a list of nodes, open them for TreeView.vue
+        set_open(nodes, opened) {
+            for (const node of nodes) {
+                if (opened.includes(node.id)) {
+                    node.open = true
+                }
+            }
+        },
+        //Used when there are changes within vault, regenerates treeDataView
+        async updateTreeDataview() {
+            let message = await new Promise(resolve => {
+            window.electronAPI.requestTreeData(this.vault)
+            window.electronAPI.response("tree-data-response", resolve)
+            })
+            if (this.treeDataView.length) {
+            let oldTreeView = this.treeDataView
+            let opened_nodes = []
+            this.treeDataView = message
+
+            opened_nodes = this.get_open(oldTreeView)
+            this.set_open(this.treeDataView, opened_nodes)
+            }
+            else {
+            this.treeDataView = message
+
+            if (this.openedNodes) {
+                this.set_open(this.treeDataView, this.openedNodes)
+            }
+            }
+        },
+        //Save vault object data in JSON
+        saveMetaData() {
+            const jsonData = {
+                currentGroup: this.currentGroup,
+                selectedObject: this.selectedObject,
+                file: this.file,
+                opened: this.openedNodes,
+            };
+
+            const jsonString = JSON.stringify(jsonData)
+
+            window.electronAPI.requestSaveData(jsonString, this.vault+'/'+this.vault.split('/')[this.vault.split('/').length-1]+'.json')
+
+        },
+        //Save content of current file in MD
+        saveContents() {
+			if (this.file) {
+				var textContent = []
+				var lines = document.querySelectorAll('.line')
+				for (let i=0; i<lines.length; i++) {
+					textContent.push(lines[i].getAttribute('data-text')
+						//.replace('&nbsp;&nbsp;&nbsp;&nbsp;', '\t')
+						.replace(/\n$/, '')
+					)
+				}
+				window.electronAPI.requestSaveFile(this.file, textContent.join('\n'))
+			}
+		},
+
+        // ----------------------------------------- COMPONENT METHODS ---------------------------------------- //
+
+        // --------------------------------------------- TITLEBAR --------------------------------------------- //
+
+        //Function to open and close sidebar
         toggleSidebar() {
+            //Disable temporaly sync between sidebar in TitleBar and Sidebar
             this.sidebar.flag = !this.sidebar.flag
             const sidebar = document.getElementById('sidebar');
             const sidebarResize = document.getElementById('resizeBarLeft');
@@ -117,7 +217,9 @@ export default {
                 document.getElementById('sidebar-title-bar').style.width = "120px"
             }
         },
+        //Function to open and close querybar
         toggleQueries() {
+            //Disable temporaly sync between querybar in TitleBar and Querybar
             this.queries.flag = !this.queries.flag
             const queries = document.getElementById('queries');
             const queriesResize = document.getElementById('resizeBarRight');
@@ -137,98 +239,30 @@ export default {
                 queriesResize.style.display = 'none'
             }
         },
-        get_open(nodes) {
-            let opened_nodes = []
-            for (const node of nodes) {
-            if (node.open) {
-                opened_nodes.push(node.id)
-            }
-            if (node.children && node.children.length) {
-                this.get_open(node.children);
-            }
-            }
-            return opened_nodes
-        },
-        set_open(nodes, opened) {
-            for (const node of nodes) {
-            if (opened.includes(node.id)) {
-                node.open = true
-            }
-            }
-        },
-        async updateTreeDataview() {
-            let message = await new Promise(resolve => {
-            window.electronAPI.requestTreeData(this.vault)
-            window.electronAPI.response("tree-data-response", resolve)
-            })
-            if (this.treeDataView.length) {
-            let oldTreeView = this.treeDataView
-            let opened_nodes = []
-            this.treeDataView = message
-
-            opened_nodes = this.get_open(oldTreeView)
-            this.set_open(this.treeDataView, opened_nodes)
-            }
-            else {
-            this.treeDataView = message
-
-            if (this.openedNodes) {
-                this.set_open(this.treeDataView, this.openedNodes)
-            }
-            }
-        },
-        createFile(message) {
-            this.file = message
-            this.files.push([this.file, this.file.split('/')[this.file.split('/').length-1]])
-            this.files = [...new Set(this.files)];
-            this.updateTreeDataview()
-        },
-        createFolder() {
+        //Create a new tab, open file and add it to files data prop
+        async createTab() {
             if (this.file) {
-                window.electronAPI.createFolder(this.file)
-                this.updateTreeDataview()
-            }
-            else {
-                window.electronAPI.createFolder(this.currentGroup.file)
-                this.updateTreeDataview()
-            }
-        },
-        toggleTreeview(flag) {
-            const opened = flag
-            function closeAllNodes(treeData) {
-                function closeNodesRecursively(node) {
-                    node.open = opened;
-                    for (const childNode of node.children) {
-                    closeNodesRecursively(childNode);
-                    }
-                }
-
-                for (const node of treeData) {
-                    closeNodesRecursively(node);
-                }
-            }
-            closeAllNodes(this.treeDataView);
-        },
-        openFile(file) {
-            if (typeof file === "string") {
-                this.file = file
-            }
-            else {
-                this.file = this.selectedObject.file
-            }
-
-            let addFile = true
-            this.files.forEach((file) => {
-                if (this.file == file[0]) {
-                    addFile = false
-                }
-            })
-
-            if (addFile) {
+                const message = await new Promise(resolve => {
+                    window.electronAPI.createFile(this.file)
+                    window.electronAPI.response('create-file-response', resolve)
+                });
+                this.file = message
                 this.files.push([this.file, this.file.split('/')[this.file.split('/').length-1]])
                 this.files = [...new Set(this.files)];
+                this.updateTreeDataview()
+            }
+            else {
+                const message = await new Promise(resolve => {
+                    window.electronAPI.createFile(this.vault)
+                    window.electronAPI.response('create-file-response', resolve)
+                });
+                this.file = message
+                this.files.push([this.file, this.file.split('/')[this.file.split('/').length-1]])
+                this.files = [...new Set(this.files)];
+                this.updateTreeDataview()
             }
         },
+        //Remove file from files data prop, delete a tab in the titlebar
         removeFile(file) {
             for (let i=0; i<this.files.length; i++) {
                 if (this.files[i]==file) {
@@ -239,27 +273,32 @@ export default {
                 }
             }
         },
+        //Set current opened file to given file
         setFile(file) {
             this.file = file[0]
         },
-        moveFile(origin, destiny) {
-            window.electronAPI.moveFileRequest(origin, destiny)
-            setTimeout(()=>{this.updateTreeDataview()}, 100)
+
+        // --------------------------------------------- SIDEBAR ---------------------------------------------- //
+
+        //Given a created file, registers it in files and file data props
+        createFile(message) {
+            this.file = message
+            this.files.push([this.file, this.file.split('/')[this.file.split('/').length-1]])
+            this.files = [...new Set(this.files)];
+            this.updateTreeDataview()
         },
-        saveFileNode(node, new_name) {
-            var short_name = new_name.split('/').splice(-1)[0].split('.').slice(0,-1).join(".")
-            if (this.file==node.id) {
-                this.file = new_name
+        //Given a created folder, registers it in files and file data props
+        createFolder() {
+            if (this.file) {
+                window.electronAPI.createFolder(this.file)
+                this.updateTreeDataview()
             }
-            for (let i=0; i<this.files.length; i++) {
-                if (this.files[i][0]==node.id) {
-                    this.files[i] = [new_name, short_name]
-                }
+            else {
+                window.electronAPI.createFolder(this.currentGroup.file)
+                this.updateTreeDataview()
             }
         },
-        openNode(node) {
-            node.open = !node.open
-        },
+        //Delete a file or folder, and remove it from the treedataview
         removeNodeFile(target) {
             window.electronAPI.requestFileDeletion(target.id)
                 
@@ -288,41 +327,51 @@ export default {
             }
             removeNodeFromTree(this.treeDataView, target.id)
         },
-        async createTab() {
-            if (this.file) {
-                const message = await new Promise(resolve => {
-                    window.electronAPI.createFile(this.file)
-                    window.electronAPI.response('create-file-response', resolve)
-                });
-                this.file = message
-                this.files.push([this.file, this.file.split('/')[this.file.split('/').length-1]])
-                this.files = [...new Set(this.files)];
-                this.updateTreeDataview()
+        //Open or close all nodes in treedataview
+        toggleTreeview(flag) {
+            const opened = flag
+            function closeAllNodes(treeData) {
+                function closeNodesRecursively(node) {
+                    node.open = opened;
+                    for (const childNode of node.children) {
+                    closeNodesRecursively(childNode);
+                    }
+                }
+
+                for (const node of treeData) {
+                    closeNodesRecursively(node);
+                }
             }
-            else {
-                const message = await new Promise(resolve => {
-                    window.electronAPI.createFile(this.vault)
-                    window.electronAPI.response('create-file-response', resolve)
-                });
-                this.file = message
-                this.files.push([this.file, this.file.split('/')[this.file.split('/').length-1]])
-                this.files = [...new Set(this.files)];
-                this.updateTreeDataview()
+            closeAllNodes(this.treeDataView);
+        },
+
+        // --------------------------------------------- TREEVIEW ---------------------------------------------- //
+        
+        //Open a directory
+        openNode(node) {
+            node.open = !node.open
+        },
+        //Save new name for a node
+        saveFileNode(node, new_name) {
+            var short_name = new_name.split('/').splice(-1)[0].split('.').slice(0,-1).join(".")
+            if (this.file==node.id) {
+                this.file = new_name
+            }
+            for (let i=0; i<this.files.length; i++) {
+                if (this.files[i][0]==node.id) {
+                    this.files[i] = [new_name, short_name]
+                }
             }
         },
-        saveMetaData() {
-            const jsonData = {
-                currentGroup: this.currentGroup,
-                selectedObject: this.selectedObject,
-                file: this.file,
-                opened: this.openedNodes,
-            };
-
-            const jsonString = JSON.stringify(jsonData)
-
-            window.electronAPI.requestSaveData(jsonString, this.vault+'/'+this.vault.split('/')[this.vault.split('/').length-1]+'.json')
-
+        //Change location of a node
+        moveFile(origin, destiny) {
+            window.electronAPI.moveFileRequest(origin, destiny)
+            setTimeout(()=>{this.updateTreeDataview()}, 100)
         },
+
+        // --------------------------------------------- QUERYBAR ---------------------------------------------- //
+        
+        //Modify vault adding an object, mainly handled in QueryBar.vue
         pushObjectToCurrentGroup(object, queryTarget) {
             if (queryTarget===0) {
                 this.currentGroup.words.push(object)
@@ -335,12 +384,7 @@ export default {
             }
             this.updateTreeDataview()
         },
-        pushConnectionToCurrentGroup(object) {
-            this.currentGroup.connections.push(object)
-        },
-        pushWordToCurrentGroup(object) {
-            this.currentGroup.words.push(object)
-        },
+        //Delete selected object, handle existing connection and tags, depending of objectType
         deleteObject() {
             if (this.selectedObject.objectType == 'Word') {
                 this.currentGroup.words.splice(this.currentGroup.words.indexOf(this.selectedObject), 1)
@@ -411,9 +455,11 @@ export default {
             this.selectedObject = []
             setTimeout(()=>{this.updateTreeDataview()}, 50)
         },
+        //Set selected object data prop
         setSelectedObject(object) {
             this.selectedObject = object
         },
+        //Save object word name, update current file instances of word and the md file of the word
         async saveWordName(value) {
             var wordTarget = this.getWordById(this.selectedObject.id)
 
@@ -450,6 +496,7 @@ export default {
             this.saveContents()
             this.updateTreeDataview()
         },
+        //Save object connection name, update current file instances of connection and the md file of the connection
         async saveConnectionName(value) {
             var connectionTarget = this.getConnectionById(this.selectedObject.id)
 
@@ -485,6 +532,7 @@ export default {
             this.saveContents()
             this.updateTreeDataview()
         },
+        //Save object category name, update current file instances of category and the md file of the category
         async saveCategoryName(value) {
             var categoryTarget = this.getCategoryById(this.selectedObject.id)
 
@@ -510,19 +558,10 @@ export default {
             this.saveContents()
             this.updateTreeDataview()
         },
-        saveContents() {
-			if (this.file) {
-				var textContent = []
-				var lines = document.querySelectorAll('.line')
-				for (let i=0; i<lines.length; i++) {
-					textContent.push(lines[i].getAttribute('data-text')
-						//.replace('&nbsp;&nbsp;&nbsp;&nbsp;', '\t')
-						.replace(/\n$/, '')
-					)
-				}
-				window.electronAPI.requestSaveFile(this.file, textContent.join('\n'))
-			}
-		},
+
+        // --------------------------------------------- TEXTEDITOR ---------------------------------------------- //
+
+        //Change current file based on history of navigated files, mostly handled in TextEditor.vue
         setHistory(file) {
             this.file = file
         },
@@ -546,95 +585,92 @@ export default {
         updateWidth()
     },
     async created() {
-        EventBus.$on('openNode', this.openNode);
-        EventBus.$on('fileopened', this.openFile);
-        EventBus.$on('filemove', this.moveFile);
-
-        EventBus.$on('saveFileNode', this.saveFileNode)
+        //TitleBar.vue methods
+        EventBus.$on('createTab', this.createTab);
+        EventBus.$on('toggleSidebar', this.toggleSidebar);
+        EventBus.$on('toggleQueries', this.toggleQueries);
+        EventBus.$on('removeFile', this.removeFile);
+        EventBus.$on('setFile', this.setFile);
+        //SideBar.vue methods
         EventBus.$on('createFile', this.createFile);
         EventBus.$on('createFolder', this.createFolder);
         EventBus.$on('toggleTreeview', this.toggleTreeview);
         EventBus.$on('removeNodeFile', this.removeNodeFile);
-
-        EventBus.$on('toggleSidebar', this.toggleSidebar);
-        EventBus.$on('toggleQueries', this.toggleQueries);
-
-        EventBus.$on('removeFile', this.removeFile);
-        EventBus.$on('setFile', this.setFile);
-        EventBus.$on('createTab', this.createTab);
-
+            //TreeView.vue methods
+            EventBus.$on('openNode', this.openNode);
+            EventBus.$on('saveFileNode', this.saveFileNode)
+            EventBus.$on('fileopened', this.openFile);
+            EventBus.$on('filemove', this.moveFile);
+        //QueryBar.vue methods
         EventBus.$on('pushObjectToCurrentGroup', this.pushObjectToCurrentGroup);
-        EventBus.$on('pushConnectionToCurrentGroup', this.pushConnectionToCurrentGroup);
-        EventBus.$on('pushWordToCurrentGroup', this.pushWordToCurrentGroup);
         EventBus.$on('selectedObject', this.setSelectedObject)
         EventBus.$on('deleteObject', this.deleteObject)
-
         EventBus.$on('saveCategoryName', this.saveCategoryName);
         EventBus.$on('saveConnectionName', this.saveConnectionName)
         EventBus.$on('saveWordName', this.saveWordName)
         EventBus.$on('openFile', this.openFile);
-
+        //TextEditor.vue methods    
         EventBus.$on('setHistory', this.setHistory)
+        //QueryView.vue  methods
 
+
+        //Retrieve opened vault
         const vaultMessage = await new Promise(resolve => {
             window.electronAPI.requestVaultData('vault-data')
             window.electronAPI.response("vault-name-response", vaultName => {
             resolve(vaultName);
             });
         });
+        this.vault = vaultMessage
 
-    this.vault = vaultMessage
-
-    const message = await new Promise(resolve => {
-        window.electronAPI.requestLoadData(this.vault+'/'+this.vault.split('/')[this.vault.split('/').length-1]+'.json')
-        window.electronAPI.response("load-data-response", resolve)
-    })
-
-    const data = JSON.parse(message)
-
-    if (!data.currentGroup || Array.isArray(data.currentGroup)) {
-
-        var newGroup = new Group()
-        newGroup.name = this.vault.split('/').splice(-1)[0]
-        newGroup.file = this.vault+'/'+newGroup.name+'.md'
-
-        this.currentGroup = newGroup
-        this.selectedObject = newGroup
-
+        //Retrieve vault json data and parse it
+        const message = await new Promise(resolve => {
+            window.electronAPI.requestLoadData(this.vault+'/'+this.vault.split('/')[this.vault.split('/').length-1]+'.json')
+            window.electronAPI.response("load-data-response", resolve)
+        })
         const data = JSON.parse(message)
 
-        this.activeItem = data.activeItem
-        this.file = data.file
-        this.openedNodes = data.opened
-    }
-    else {
+        //Read the file and set values to currentGroup prop
+        if (!data.currentGroup || Array.isArray(data.currentGroup)) {
 
-        this.currentGroup = data.currentGroup
-        this.selectedObject = data.selectedObject
-        this.activeItem = data.activeItem
-        this.file = data.file
-        this.openedNodes = data.opened
-    }
+            var newGroup = new Group()
+            newGroup.name = this.vault.split('/').splice(-1)[0]
+            newGroup.file = this.vault+'/'+newGroup.name+'.md'
 
-    if (this.file) {
-        this.files = [[this.file, this.file.split('/')[this.file.split('/').length-1]]]}
-    else {
-        this.files = []}
-        this.file = ''
+            this.currentGroup = newGroup
+            this.selectedObject = newGroup
+
+            const data = JSON.parse(message)
+
+            this.activeItem = data.activeItem
+            this.file = data.file
+            this.openedNodes = data.opened
+        }
+        else {
+
+            this.currentGroup = data.currentGroup
+            this.selectedObject = data.selectedObject
+            this.activeItem = data.activeItem
+            this.file = data.file
+            this.openedNodes = data.opened
+        }
+
+        //Initialize treeDataView with fresh data
         this.updateTreeDataview()
     },
     watch: {
+        //Save vault data when a change occurs
         currentGroup: {
             deep: true,
             handler() {
                 this.saveMetaData()
             }
         },
+        //Save vault data when a change occurs
         selectedObject: {
             deep: true,
             handler() {
                 if (this.selectedObject) {
-                    this.newName = this.selectedObject.name
                     this.saveMetaData();
                 }
             }
@@ -643,6 +679,7 @@ export default {
             deep: true,
             handler() {
                 if (this.file) {
+                    //Set fileQuery for QueryView when there is a file opening
                     if (this.file.includes('/words/')) {
                         this.fileQuery = this.currentGroup.words.filter((e)=> e.file==this.file)[0]
                     }
@@ -656,30 +693,33 @@ export default {
                         this.fileQuery = []
                     }
                 }
+                //Save vault data when a change occurs
                 this.saveMetaData();
             }
         },
         treeDataView: {
             deep: true,
             handler() {
+                //Maintain opened nodes
                 let  opened_nodes = []
-                    this.openedNodes = []
+                this.openedNodes = []
 
-                    function get_open(nodes) {
-                for (const node of nodes) {
-                    if (node.open) {
-                    opened_nodes.push(node.id)
-                    }
-                    if (node.children && node.children.length) {
-                    get_open(node.children);
-                    }
-                }
+                function get_open(nodes) {
+                    for (const node of nodes) {
+                        if (node.open) {
+                        opened_nodes.push(node.id)
+                        }
+                        if (node.children && node.children.length) {
+                            get_open(node.children);
+                        }
+                    }   
                 }
                 get_open(this.treeDataView)
                 this.openedNodes = opened_nodes
 
+                //Save vault data when a change occurs
                 this.saveMetaData()
-                }
+            }
         }
     },
 };
