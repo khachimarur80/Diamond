@@ -1262,6 +1262,22 @@
                     window.electronAPI.requestSaveFile(this.file, textContent.join('\n'))
                 }
             },
+            highLightInstance(instance) {
+                setTimeout(()=>{
+                    let instanceObject = document.getElementById(instance.join('-'))
+                    if (instanceObject) {
+                        instanceObject.classList.add('active-instance')
+                    }
+                },200)
+            }
+        },
+        created() {
+            EventBus.$on('highLightInstance', this.highLightInstance)
+            if (this.file) {
+                this.$nextTick(()=> {
+                    this.loadContents()
+                })
+            }
         },
         watch: {
             file: {
@@ -1274,7 +1290,6 @@
                         else {
                             this.navigated = false
                         }
-                        this.loadContents()
                     }
                 }
             }

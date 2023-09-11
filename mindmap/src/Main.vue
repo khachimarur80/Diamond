@@ -6,7 +6,7 @@
         <SideBar :items="treeDataView" :vault="vault" @createFile="createFile"></SideBar>
         <div id="body">
             <TextEditor ref="textEditor" :file="file" :currentGroup="currentGroup"></TextEditor>
-            <QueryView></QueryView>
+            <QueryView ref="queryView" :fileQuery="fileQuery" :currentGroup="currentGroup"></QueryView>
         </div>
         <QueryBar :currentGroup="currentGroup"></QueryBar>
         </div>
@@ -612,7 +612,7 @@ export default {
         //TextEditor.vue methods    
         EventBus.$on('setHistory', this.setHistory)
         //QueryView.vue  methods
-
+        EventBus.$on('openFile', this.openFile);
 
         //Retrieve opened vault
         const vaultMessage = await new Promise(resolve => {
@@ -655,6 +655,12 @@ export default {
             this.openedNodes = data.opened
         }
 
+        if (this.file) {
+			this.files = [[this.file, this.file.split('/')[this.file.split('/').length-1]]]}
+		else {
+			this.files = []
+        }
+
         //Initialize treeDataView with fresh data
         this.updateTreeDataview()
     },
@@ -691,6 +697,9 @@ export default {
                     }
                     if (!this.fileQuery) {
                         this.fileQuery = []
+                    }
+                    if (this.$refs.queryView) {
+                        this.$refs.queryView.localFileQuery = this.fileQuery
                     }
                 }
                 //Save vault data when a change occurs

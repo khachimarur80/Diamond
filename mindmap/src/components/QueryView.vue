@@ -1,8 +1,8 @@
 <template>
     <div id="map-content">
         <div id="query" v-show="mapViewMode=='query'">
-            <div class="query-content" v-if="fileQuery.objectType=='Word'">
-                <h2>{{ fileQuery.name }}</h2>
+            <div class="query-content" v-if="localFileQuery.objectType=='Word'">
+                <h2>{{ localFileQuery.name }}</h2>
                 <div class="query-list">
                     <div class="query-list-heading">
                         <v-icon color="red">mdi-pound</v-icon>
@@ -12,7 +12,7 @@
                         <v-btn outlined color="red" @click="addCategory">Add</v-btn>
                     </div>
 
-                    <div v-for="category in fileQuery.categories" :key="category" class="query-list-item">
+                    <div v-for="(category, i) in localFileQuery.categories" :key="i" class="query-list-item">
                         <span @click="openFile(getCategoryById(category).file)" class="category-link">{{ category }}</span>
                         <v-btn icon class="delete-query-list-item" dense small @click="removeCategory(category)">
                             <v-icon color="red">
@@ -26,7 +26,7 @@
                         <v-icon color="blue">mdi-transit-connection-horizontal</v-icon>
                         <h3>Connections</h3>
                     </div>
-                    <div v-for="connection in fileQuery.connections" :key="connection" class="query-list-row">
+                    <div v-for="(connection, i) in localFileQuery.connections" :key="i" class="query-list-row">
                         <div class="query-list-item-column">
                             <span @click="openFile(getCategoryById(connection.component1).file)" class="category-link" v-if="getCategoryById(connection.component1)">{{ getCategoryById(connection.component1).name }}</span>
                             <span @click="openFile(getWordById(connection.component1).file)" class="word-link" v-else>{{ getWordById(connection.component1).name }}</span>
@@ -51,7 +51,7 @@
                         <h3>Instances</h3>
                     </div>
                         <div class="instances">
-                        <div v-for="(instanceList, key) in fileQuery.instances" :key="key" class="instance-container">
+                        <div v-for="(instanceList, key) in localFileQuery.instances" :key="key" class="instance-container">
                             <h4 style="text-align: center;">{{ key }}</h4>
                             <div class="table-container">
                             <table class="query-list-table">
@@ -70,7 +70,7 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr v-for="item in instanceList" :key="item">
+                                <tr v-for="(item, i) in instanceList" :key="i">
                                     <td>{{ item[2] }}</td>
                                     <td>{{ item[3] }}</td>
                                     <td>{{ item[4] }}</td>
@@ -83,8 +83,8 @@
                         </div>
                 </div>
             </div>
-            <div class="query-content" v-if="fileQuery.objectType=='Connection'">
-                <h2>{{ fileQuery.name }}</h2>
+            <div class="query-content" v-if="localFileQuery.objectType=='Connection'">
+                <h2>{{ localFileQuery.name }}</h2>
                 <div class="query-list">
                     <div class="query-list-heading">
                         <v-icon>mdi-cog-outline</v-icon>
@@ -93,7 +93,7 @@
                     <div  class="query-list-row" style="flex-direction: column;">
                         <h4>Directionality</h4>
                         <div>
-                            <v-select :items="directionality" item-value="value" color="white" v-model="fileQuery.directionality" class="directionality" dense>
+                            <v-select :items="directionality" item-value="value" color="white" v-model="localFileQuery.directionality" class="directionality" dense>
                                 <template v-slot:selection="{ item }">
                                     <v-icon size="item.size">{{ item.icon }}</v-icon>
                                 </template>
@@ -110,10 +110,10 @@
                     </div>
                     <div  class="query-list-row" style="flex-direction: column;">
                         <h4>Function</h4>
-                        <v-btn v-if="!fileQuery.upgraded" @click="fileQuery.upgraded = true" color="blue" outlined dense>
+                        <v-btn v-if="!localFileQuery.upgraded" @click="localFileQuery.upgraded = true" color="blue" outlined dense>
                             Upgrade
                         </v-btn>
-                        <v-btn v-if="!fileQuery.upgraded" color="warning" outlined dense @click="evaluate(fileQuery)">
+                        <v-btn v-if="!localFileQuery.upgraded" color="warning" outlined dense @click="evaluate(localFileQuery)">
                             Evaluate
                         </v-btn>
                         <br>
@@ -130,7 +130,7 @@
                         </div>
                         <v-btn outlined color="red" @click="addCategory">Add</v-btn>
                     </div>
-                    <div v-for="category in fileQuery.categories" :key="category" class="query-list-item">
+                    <div v-for="(category, i) in localFileQuery.categories" :key="i" class="query-list-item">
                         <span @click="openFile(getCategoryById(category).file)" class="category-link">{{ getCategoryById(category).name }}</span>
                         <v-btn icon class="delete-query-list-item" dense small @click="removeCategory(category)">
                             <v-icon color="red">
@@ -177,7 +177,7 @@
                             <span v-if="generatingConnection.component2">{{ generatingConnection.component2.name }}</span>
                         </div>
                     </div>
-                    <div v-for="connection in fileQuery.connections" :key="connection" class="query-list-row">
+                    <div v-for="(connection, i) in localFileQuery.connections" :key="i" class="query-list-row">
                         <div class="query-list-item-column">
                             <span @click="openFile(getCategoryById(connection.component1).file)" class="category-link" v-if="getCategoryById(connection.component1)">{{ getCategoryById(connection.component1).name }}</span>
                             <span @click="openFile(getWordById(connection.component1).file)" class="word-link" v-else>{{ getWordById(connection.component1).name }}</span>
@@ -202,7 +202,7 @@
                         <h3>Instances</h3>
                     </div>
                         <div class="instances">
-                        <div v-for="(instanceList, key) in fileQuery.instances" :key="key" class="instance-container">
+                        <div v-for="(instanceList, key) in localFileQuery.instances" :key="key" class="instance-container">
                             <h4 style="text-align: center;">{{ key }}</h4>
                             <div class="table-container">
                             <table class="query-list-table">
@@ -221,7 +221,7 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr v-for="item in instanceList" :key="item">
+                                <tr v-for="(item, i) in instanceList" :key="i">
                                     <td>{{ item[2] }}</td>
                                     <td>{{ item[3] }}</td>
                                     <td>{{ item[4] }}</td>
@@ -234,8 +234,8 @@
                         </div>
                 </div>
             </div>
-            <div class="query-content" v-if="fileQuery.objectType=='Category'">
-                <h2>{{ fileQuery.name }}</h2>
+            <div class="query-content" v-if="localFileQuery.objectType=='Category'">
+                <h2>{{ localFileQuery.name }}</h2>
                 <div class="query-list">
                     <div class="query-list-heading">
                         <v-icon color="green">mdi-code-brackets</v-icon>
@@ -245,7 +245,7 @@
                         <v-btn outlined color="green" @click="addWord">Add</v-btn>
                     </div>
 
-                    <div v-for="word in fileQuery.words" class="query-list-item" :key="word">
+                    <div v-for="(word, i) in localFileQuery.words" class="query-list-item" :key="i">
                         <span @click="openFile(getWordById(word).file)">{{ getWordById(word).name }}</span>
                         <v-btn icon class="delete-query-list-item" dense small @click="removeWord(word)">
                             <v-icon color="green">
@@ -262,7 +262,7 @@
                         </div>
                         <v-btn outlined color="blue" @click="addConnection">Add</v-btn>
                     </div>
-                    <div v-for="connection in fileQuery.connectionsObj" :key="connection" class="query-list-item">
+                    <div v-for="(connection, i) in localFileQuery.connectionsObj" :key="i" class="query-list-item">
                         <span @click="openFile(getConnectionById(connection).file)">{{ getConnectionById(connection).name }}</span>
                         <v-btn icon class="delete-query-list-item" dense small @click="removeCategory(connection)">
                             <v-icon color="blue">
@@ -276,13 +276,168 @@
     </div>
 </template>
 <script>
+
+    //Vue instance used for comunication between vue components in the app
+    import EventBus from '../event-bus.js';
+
     export default {
         name: 'QueryView',
         data: () => ({
             mapViewMode : 'query',
-            fileQuery: [],
+            localFileQuery: [],
+            selectedCategory: null,
+            selectedWord: null,
+            selectedConnection: null,
+            selectedWordConnection: null,
+            selectedCategoryConnection: null,
+            generatingConnection: null,
+            directionality: [
+                {value: 'lr', icon: 'mdi-arrow-left-right-bold'}, 
+                {value: 'l', icon: 'mdi-arrow-left-bold', size: 19 },
+                {value: 'r', icon: 'mdi-arrow-right-bold', size: 19 },
+            ],
         }),
-        props: {},
-        methods: {},
+        props: {
+            fileQuery: {
+                required: true,
+            },
+            currentGroup: {
+                required: true,
+            },
+        },
+        methods: {
+            getWordById(id) {
+                for(let i=0; i<this.currentGroup.words.length; i++) {
+                    if (this.currentGroup.words[i].id==id) {
+                        return this.currentGroup.words[i]
+                    }
+                }
+            },
+            getCategoryById(id) {
+                for(let i=0; i<this.currentGroup.categories.length; i++) {
+                    if (this.currentGroup.categories[i].id==id) {
+                        return this.currentGroup.categories[i]
+                    }
+                }
+            },
+            getConnectionById(id) {
+                for(let i=0; i<this.currentGroup.connections.length; i++) {
+                    if (this.currentGroup.connections[i].id==id) {
+                        return this.currentGroup.connections[i]
+                    }
+                }
+            },
+            openFile(file) {
+                EventBus.$emit('openFile', file)
+            },
+            addCategory() {
+            if (this.selectedCategory) {
+                if (this.localFileQuery.objectType == 'Connection') {
+                    this.getCategoryById(this.selectedCategory).connectionsObj.push(this.localFileQuery.id)
+                    this.localFileQuery.categories.push(this.selectedCategory)
+                }
+                else if (this.localFileQuery.objectType == 'Word') {
+                    this.getCategoryById(this.selectedCategory).words.push(this.localFileQuery.id)
+                    this.localFileQuery.categories.push(this.selectedCategory)
+                }
+                this.selectedCategory = null
+            }
+            },
+            addWord() {
+                this.getWordById(this.selectedWord).categories.push(this.localFileQuery.id)
+                this.localFileQuery.words.push(this.selectedWord)
+            
+                this.selectedWord = null
+            },
+            addConnection() {
+                this.getConnectionById(this.selectedConnection).categories.push(this.localFileQuery.id)
+                this.localFileQuery.connectionsObj.push(this.selectedConnection)
+            
+                this.selectedConnection = null
+            },
+            removeCategory(category) {
+                if (this.localFileQuery.objectType == 'Connection') {
+                    this.localFileQuery.categories = this.localFileQuery.categories.slice(1, this.localFileQuery.categories.indexOf(category))
+                    this.getCategoryById(category).connectionsObj = this.getCategoryById(category).connectionsObj.slice(1, this.getCategoryById(category).connectionsObj.indexOf(this.localFileQuery.id)) 
+                }
+                else if (this.localFileQuery.objectType == 'Word') {
+                    this.localFileQuery.categories = this.localFileQuery.categories.slice(1, this.localFileQuery.categories.indexOf(category))
+                    this.getCategoryById(category).connectionsObj = this.getCategoryById(category).words.slice(1, this.getCategoryById(category).connectionsObj.indexOf(this.localFileQuery.id))
+                }
+                else {
+                    this.localFileQuery.connectionsObj = this.localFileQuery.connectionsObj.slice(1, this.localFileQuery.connectionsObj.indexOf(category))
+                    this.getConnectionById(category).categories = this.getConnectionById(category).categories.slice(1, this.getConnectionById(category).categories.indexOf(this.localFileQuery.id)) 
+                }
+            },
+            removeWord(word) {
+                this.localFileQuery.words = this.localFileQuery.words.filter(w => w!=word)
+            },
+            removeConnection(connection) {
+                console.log(connection)
+                console.log(this.getConnectionById(connection.connection).connections)
+                this.getConnectionById(connection.connection).connections = this.getConnectionById(connection.connection).connections.filter(c => c!=connection)
+                if (this.getWordById(connection.component1)) {
+                    this.getWordById(connection.component1).connections = this.getWordById(connection.component1).connections.filter(c => c!=connection)
+                }
+                else {
+                    this.getCategoryById(connection.component1).connections = this.getCategoryById(connection.component1).connections.filter(c => c!=connection)
+                }
+                if (this.getWordById(connection.component2)) {
+                    this.getWordById(connection.component2).connections = this.getWordById(connection.component2).connections.filter(c => c!=connection)
+                }
+                else {
+                    this.getCategoryById(connection.component2).connections = this.getCategoryById(connection.component2).connections.filter(c => c!=connection)
+                }
+            },
+            addComponentConnection() {
+                if (!this.generatingConnection) {
+                    this.generatingConnection = {
+                        directionality: this.localFileQuery.directionality,
+                        component1: null,
+                        component2: null,
+                    }
+                }
+                if (!this.generatingConnection.component1) {
+                    if (this.selectedWordConnection) {
+                        this.generatingConnection.component1 = this.getWordById(this.selectedWordConnection)
+                        this.selectedWordConnection = null
+                    }
+                    else if (this.selectedCategoryConnection) {
+                        this.generatingConnection.component1 = this.getCategoryById(this.selectedCategoryConnection)
+                        this.selectedCategoryConnection = null
+                    }
+                }
+                else if (!this.generatingConnection.component2) {
+                    if (this.selectedWordConnection) {
+                        this.generatingConnection.component2 = this.getWordById(this.selectedWordConnection)
+                        this.selectedWordConnection = null
+                    }
+                    else if (this.selectedCategoryConnection) {
+                        this.generatingConnection.component2 = this.getCategoryById(this.selectedCategoryConnection)
+                        this.selectedCategoryConnection = null
+                    }
+                    var parsedConnection = {
+                        directionality: this.generatingConnection.directionality,
+                        component1: this.generatingConnection.component1.id,
+                        component2: this.generatingConnection.component2.id,
+                        connection: this.localFileQuery.id,
+                    }
+                    this.localFileQuery.connections.push(parsedConnection)
+                    this.generatingConnection.component1.connections.push(parsedConnection)
+                    this.generatingConnection.component2.connections.push(parsedConnection)
+                    this.generatingConnection = null
+                }
+            },
+            evaluate(connection) {
+                console.log(connection)
+            },
+            viewInstance(instance) {
+                EventBus.$emit('setFile', [instance[1]])
+                EventBus.$emit('highLightInstance', instance)
+            },
+        },
+        async created() {
+            this.localFileQuery = this.fileQuery
+        }
     }
 </script>
