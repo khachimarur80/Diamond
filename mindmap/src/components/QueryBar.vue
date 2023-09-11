@@ -208,6 +208,7 @@
             }
         },
         methods: {
+            //Being able to select the queryTarget (word, connection or category) by scrolling
             scrollQuery() {
                 if (this.queryTarget!=null) {
                     this.queryTarget = (this.queryTarget+1)%3
@@ -216,12 +217,15 @@
                     this.queryTarget = 0
                 }
             },
+            //New object creation
             async newObject() {
+                //Object type will depend on the queryTarget, wether if it is word, conneciton or category
                 if (this.queryTarget==0) {
                     var newWord = new Word()
-                    newWord.name = '#'+newWord.id
+                    newWord.name = '#'+newWord.id //Temporary name
                     this.selectedObject = newWord
 
+                    //Create file for the new word
                     let message = await new Promise(resolve => {
                         window.electronAPI.requestLoadWord(this.currentGroup.file, newWord.name)
                         window.electronAPI.response('load-word-response', resolve)
@@ -229,13 +233,15 @@
 
                     newWord.file = message
 
+                    //Send event to Main.vue to update currentGroup/vault
                     EventBus.$emit('pushObjectToCurrentGroup', newWord, this.queryTarget)
                 }
                 else if (this.queryTarget==1) {
                     var newConnection = new Connection()
-                    newConnection.name = '#'+newConnection.id
+                    newConnection.name = '#'+newConnection.id //Temporary name
                     this.selectedObject = newConnection
                     
+                    //Create file for the new connection
                     let message = await new Promise(resolve => {
                         window.electronAPI.requestLoadConnection(this.currentGroup.file, newConnection.name)
                         window.electronAPI.response('load-connection-response', resolve)
@@ -243,13 +249,15 @@
 
                     newConnection.file = message
 
+                    //Send event to Main.vue to update currentGroup/vault
                     EventBus.$emit('pushObjectToCurrentGroup', newConnection, this.queryTarget)
                 }
                 else if (this.queryTarget==2) {
                     var newCategory = new Category()
-                    newCategory.name = '#'+newCategory.id
+                    newCategory.name = '#'+newCategory.id //Temporary name
                     this.selectedObject = newCategory
                     
+                    //Create file for the new category
                     let message = await new Promise(resolve => {
                         window.electronAPI.requestLoadCategory(this.currentGroup.file, newCategory.name)
                         window.electronAPI.response('load-category-response', resolve)
@@ -257,9 +265,11 @@
 
                     newCategory.file = message
 
+                    //Send event to Main.vue to update currentGroup/vault
                     EventBus.$emit('pushObjectToCurrentGroup', newCategory, this.queryTarget)
                 }
             },
+            //Funcitons to update the objects name
             async saveWordName() {
                 var value = this.newName
                 EventBus.$emit('saveWordName', value)
@@ -284,19 +294,25 @@
             }
         },
         async created () {
+            //Funciton that goes from TextEditor.vue to QueryBar to update selected object
+            // when clicking on an object loaded in the text
             EventBus.$on('setSelectedObject', this.setSelectedObject)
         },
         watch: {
             selectedObject: {
                 handler() {
                     if (this.selectedObject) {
+                        //Store temporary name of selected object
                         this.newName = this.selectedObject.name
                     }
+                    //Update selected object to Main.vue
                     EventBus.$emit('selectedObject', this.selectedObject)
                 }
             },
         },
         computed: {
+            //Computed value that checks if there are changes in name of selected object
+            //To activate save button
             canSave() {
                 if (this.newName!=this.selectedObject.name) {
                     return true

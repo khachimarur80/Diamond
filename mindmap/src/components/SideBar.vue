@@ -117,11 +117,14 @@
             createFolder() {
                 EventBus.$emit('createFolder')    
             },
+            //Open or close all nodes
             toggleTreeview() {
                 this.treeViewOpened = !this.treeViewOpened
                 const opened = this.treeViewOpened
+                //Using EventBus to change parent prop
                 EventBus.$emit('toggleTreeview', opened)
             },
+            //Open context menu for node in treeDataView
             nodeMouseDown(event) {
                 this.clickMenu.opened = true
                 this.clickMenu.x = event.clientX
@@ -131,6 +134,7 @@
                     document.getElementById('node-click-menu').focus()
                 })
             },
+            //Make node contenteditable
             renameFile() {
                 var target = this.clickMenu.node
                 target.setAttribute('contenteditable', 'true')
@@ -143,9 +147,11 @@
             hideContextMenu() {
                 this.clickMenu.opened = false
             },
+            //Remove node
             removeNodeFile() {
                 this.clickMenu.opened = false
                 var target = this.clickMenu.node
+                //EventBus because we are changing parent treeDataView prop
                 EventBus.$emit('removeNodeFile', target)
             },
         },

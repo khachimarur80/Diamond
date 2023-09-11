@@ -67,6 +67,7 @@
                 }
                 return null;
             },
+            //Make node contenteditable
             editFile(event) {
                 event.target.setAttribute('contenteditable', 'true')
                 const range = document.createRange();
@@ -75,6 +76,7 @@
                 selection.removeAllRanges();
                 selection.addRange(range);
             },
+            //Update file or directory name
             async saveFile(event) {
                     event.target.setAttribute('contenteditable', 'false')
 
@@ -85,6 +87,7 @@
 
                     if (message) {
                         var targetNode = this.findNodeById(this.items, event.target.id)
+                        //Change file prop in Main.vue
                         EventBus.$emit('saveFileNode', targetNode, message)
                     
                         targetNode.name = message.split('/').splice(-1)[0].split('.').slice(0,-1).join(".")
@@ -116,12 +119,15 @@
                     this.nodeOrigin = this.findNodeById(this.items, document.querySelector("[data-dragging='true']").id)
                 }
             },
+
+            //Events for node movement
             dragEndNode(event) {
                 event.target.removeAttribute('data-dragging')
             },
             dragLeaveNode(event) {
                 event.target.classList.remove('drag-over-node')
             },
+            //Move node to target drop
             dragDropNode(event) {
                 var nodeDestiny = this.findNodeById(this.items, event.target.id)
                 if (nodeDestiny) {

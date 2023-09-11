@@ -84,6 +84,7 @@
     }),
   
     methods: {
+        //Logic is handled in Main.vue
         createTab() {
             EventBus.$emit('createTab')
         },
