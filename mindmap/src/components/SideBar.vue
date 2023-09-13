@@ -155,6 +155,30 @@
                 EventBus.$emit('removeNodeFile', target)
             },
         },
+        mounted() {
+            const resizeBarLeft = document.querySelector("#resizeBarLeft");
+            const sidebar = document.querySelector("#sidebar");
+
+            resizeBarLeft.addEventListener("mousedown", () => {
+              document.addEventListener("mousemove", resizeSidebar, false);
+              document.addEventListener("mouseup", () => {
+                document.removeEventListener("mousemove", resizeSidebar, false);
+              }, false);
+            });
+
+            function resizeSidebar(e) {
+              const size = `${e.clientX + 2}px`;
+              if (e.clientX+2<245) {
+                sidebar.style.width = '245px';
+              }
+              else if (e.clientX+2>600) {
+                sidebar.style.width = '600px';
+              }
+              else {
+                sidebar.style.width = size;
+              }
+            }
+        },
         created() {
             EventBus.$on('nodeMouseDown', this.nodeMouseDown)
         }

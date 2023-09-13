@@ -1,20 +1,6 @@
 <template>
   <div id="vaults">
     <div class="title-bar">
-      <div class="default-buttons">
-        <button id="close" @click="closeWindow">
-          <v-icon size="10px" color="black" class="default-button-icon">
-             mdi-close
-          </v-icon>
-        </button>
-        <button id="minimize" @click="minimizeWindow">
-            <v-icon size="10px" color="black" class="default-button-icon">
-            mdi-minus
-            </v-icon>
-        </button>
-        <button id="expand" disabled>
-        </button>
-      </div>
     </div>
     <br>
     <v-list flat>
@@ -23,7 +9,7 @@
           <v-list-item-icon>
             <v-icon>mdi-folder</v-icon>
           </v-list-item-icon>
-          <v-list-item-content @mouseup="openVault(vault)">
+          <v-list-item-content @mousedown="openVault(vault)">
             <v-list-item-title v-text="vault.name"></v-list-item-title>
             </v-list-item-content>
           <v-list-item-icon >
@@ -48,13 +34,6 @@
     },
 
     methods: {
-      //System function actions for titlebar
-      closeWindow() {
-        window.electronAPI.closeWindow()
-      },
-      minimizeWindow() {
-        window.electronAPI.minimizeWindow()
-      },
       openVault(vault) {
         window.electronAPI.openVault(vault.id)
       },

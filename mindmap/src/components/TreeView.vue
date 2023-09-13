@@ -24,7 +24,7 @@
                     @dragend="dragEndNode" draggable=true class="node-file-name" :id="node.id">{{ node.name }}</div>
                 </div>
             </div>
-            <TreeView :items="node.children" :vault="vault" v-if="node.open" class="node"></TreeView>
+            <TreeView :items="node.children" :vault="''" v-if="node.open" class="node"></TreeView>
         </div>
     </div>
 </template>

@@ -293,6 +293,33 @@
                 this.selectedObject = object
             }
         },
+        mounted() {
+            const resizeBarRight = document.querySelector("#resizeBarRight");
+            const queries = document.querySelector("#queries");
+
+            resizeBarRight.addEventListener("mousedown", () => {
+              document.addEventListener("mousemove", resizeQueries, false);
+              document.addEventListener("mouseup", () => {
+                document.removeEventListener("mousemove", resizeQueries, false);
+                queries.removeAttribute('user-select')
+              }, false);
+            });
+
+            function resizeQueries(e) {
+              const size = `${window.innerWidth - e.clientX}px`;
+
+              if ((window.innerWidth - e.clientX)<245) {
+                queries.style.width = '245px';
+              }
+              else if (window.innerWidth - e.clientX>600) {
+                queries.style.width = '600px';
+              }
+              else {
+                queries.style.width = size;
+              }
+              queries.setAttribute('user-select', 'none')
+            }
+        },
         async created () {
             //Funciton that goes from TextEditor.vue to QueryBar to update selected object
             // when clicking on an object loaded in the text

@@ -1,23 +1,6 @@
 <template>
     <div style="display: flex; width: 100h;" id="title-bar">
         <div class="title-bar" id="sidebar-title-bar">
-            <div class="default-buttons">
-                <button id="close" @click="closeWindow">
-                    <v-icon size="10px" color="black" class="default-button-icon">
-                        mdi-close
-                    </v-icon>
-                </button>
-                <button id="minimize" @click="minimizeWindow">
-                    <v-icon size="10px" color="black" class="default-button-icon">
-                        mdi-minus
-                    </v-icon>
-                </button>
-                <button id="expand" @click="expandWindow">
-                    <v-icon size="10px" color="black" class="default-button-icon" style="transform: rotate(-45deg);">
-                        mdi-unfold-more-horizontal
-                    </v-icon>
-                </button>
-            </div>
             <v-btn class="toggle-sidebar-left" small icon dense @click="toggleSidebar">
                 <v-icon size="20" color="secondary">
                     mdi-newspaper-variant-outline
@@ -99,15 +82,6 @@
         },
         setFile(file) {
             EventBus.$emit('setFile', file)
-        },
-        closeWindow() {
-            window.electronAPI.closeWindow()
-        },
-        minimizeWindow() {
-            window.electronAPI.minimizeWindow()
-        },
-        expandWindow() {
-            window.electronAPI.expandWindow()
         },
     },
   

@@ -9,17 +9,11 @@
                     <v-icon small>mdi-arrow-right</v-icon>
                 </v-btn>
             </div>
+            <v-spacer></v-spacer>
             <span class="file-name">
                 {{ this.file }}
             </span>
-            <v-btn @click="changeTextViewMode" icon color="secondary" id="text-view-mode" small>
-                <v-icon v-if="textViewMode=='read'" size="20">
-                    mdi-pencil-outline
-                </v-icon>
-                <v-icon v-if="textViewMode=='edit'" size="20">
-                    mdi-book-open-blank-variant
-                </v-icon>
-            </v-btn>
+            <v-spacer></v-spacer>
         </div>
         <div id="text-display">
             <div id="text" contenteditable v-show="file" @mousedown="textMouseDown" @keydown="textKeyDown" @keyup="textKeyUp" @blur="textBlur" @mouseup="textMouseUp" @paste="textPaste">
@@ -502,89 +496,88 @@
                     let words = element.querySelectorAll('.word');
 
                     for (let i = 0; i < connections.length; i++) {
-                    let fullConnectionText = connections[i].textContent.trim();
-                    let connectionText = fullConnectionText.substring(1, fullConnectionText.length - 1)
-                    
-                    let targetConnection = this.currentGroup.connections.find(connection => connection.name === connectionText);
-                    if (targetConnection) {
-                        connections[i].setAttribute('data-id', targetConnection.id);
-                    }
-                    else {
-                        let newConnection = new Connection()
-                            newConnection.name = connectionText
-                            EventBus.$emit('pushConnectionToCurrentGroup', newConnection)
-                            connections[i].setAttribute('data-id', newConnection.id);
+                        let fullConnectionText = connections[i].textContent.trim();
+                        let connectionText = fullConnectionText.substring(1, fullConnectionText.length - 1)
                         
-                        try {
-                        const message = await new Promise(resolve => {
-                            window.electronAPI.requestLoadConnection(this.currentGroup.file, newConnection.name);
-                            window.electronAPI.response('load-connection-response', resolve);
-                        });
-                        
-                        newConnection.file = message;
-                        } catch (error) {
-                        console.error('Error loading word:', error);
+                        let targetConnection = this.currentGroup.connections.find(connection => connection.name === connectionText);
+                        if (targetConnection) {
+                            connections[i].setAttribute('data-id', targetConnection.id);
                         }
-                        
-                    }
+                        else {
+                            let newConnection = new Connection()
+                            newConnection.name = connectionText
+                            connections[i].setAttribute('data-id', newConnection.id);
+                            
+                            try {
+                            const message = await new Promise(resolve => {
+                                window.electronAPI.requestLoadConnection(this.currentGroup.file, newConnection.name);
+                                window.electronAPI.response('load-connection-response', resolve);
+                            });
+                            
+                            newConnection.file = message;
+                            } catch (error) {
+                            console.error('Error loading word:', error);
+                            }
+                            EventBus.$emit('pushObjectToCurrentGroup', newConnection, 1)
+                        }
                     }
                     for (let i = 0; i < words.length; i++) {
-                    let fullWordText = words[i].textContent.trim()
-                    let wordText = fullWordText.substring(1, fullWordText.length - 1);
+                        let fullWordText = words[i].textContent.trim()
+                        let wordText = fullWordText.substring(1, fullWordText.length - 1);
 
-                    let fullConnection = [words[i]]
-                    let currentNode = words[i]
-                    while (currentNode.previousSibling) {
-                        currentNode = currentNode.previousSibling
-                        if (currentNode.classList) {
-                            if (currentNode.classList.contains('connection')) {
-                                if (fullConnection.length==1) {
-                                    fullConnection.push(currentNode)
+                        let fullConnection = [words[i]]
+                        let currentNode = words[i]
+                        while (currentNode.previousSibling) {
+                            currentNode = currentNode.previousSibling
+                            if (currentNode.classList) {
+                                if (currentNode.classList.contains('connection')) {
+                                    if (fullConnection.length==1) {
+                                        fullConnection.push(currentNode)
+                                    }
+                                    else {
+                                        break
+                                    }
+                                }
+                                else if (currentNode.classList.contains('word')) {
+                                    if (fullConnection.length==2) {
+                                        fullConnection.push(currentNode)
+                                    }
+                                    else {
+                                        break
+                                    }
                                 }
                                 else {
                                     break
                                 }
                             }
-                            else if (currentNode.classList.contains('word')) {
-                                if (fullConnection.length==2) {
-                                    fullConnection.push(currentNode)
-                                }
-                                else {
-                                    break
-                                }
+                            else if (currentNode.nodeValue.trim()!='') {
+                                break
                             }
-                            else {
+                            else if (fullConnection.length==3) {
                                 break
                             }
                         }
-                        else if (currentNode.nodeValue.trim()!='') {
-                            break
+                        let targetWord = this.currentGroup.words.find(word => word.name === wordText);
+                        if (targetWord) {
+                            words[i].setAttribute('data-id', targetWord.id);
                         }
-                        else if (fullConnection.length==3) {
-                            break
+                        else {
+                            let newWord = new Word();
+                            newWord.name = wordText;
+                            words[i].setAttribute('data-id', newWord.id);
+                            
+                            try {
+                                const message = await new Promise(resolve => {
+                                    window.electronAPI.requestLoadWord(this.currentGroup.file, newWord.name);
+                                    window.electronAPI.response('load-word-response', resolve);
+                                });
+                                
+                                newWord.file = message;
+                            } catch (error) {
+                            console.error('Error loading word:', error);
+                            }
+                            EventBus.$emit('pushObjectToCurrentGroup', newWord, 0)
                         }
-                    }
-                    let targetWord = this.currentGroup.words.find(word => word.name === wordText);
-                    if (targetWord) {
-                        words[i].setAttribute('data-id', targetWord.id);
-                    }
-                    else {
-                        let newWord = new Word();
-                        newWord.name = wordText;
-                        EventBus.$emit('pushWordToCurrentGroup', newWord)
-                        words[i].setAttribute('data-id', newWord.id);
-                        
-                        try {
-                        const message = await new Promise(resolve => {
-                            window.electronAPI.requestLoadWord(this.currentGroup.file, newWord.name);
-                            window.electronAPI.response('load-word-response', resolve);
-                        });
-                        
-                        newWord.file = message;
-                        } catch (error) {
-                        console.error('Error loading word:', error);
-                        }
-                    }
                     }
                     this.$nextTick( async ()=>{
                         let globalObjects = document.querySelectorAll('.connection, .word')
@@ -605,26 +598,29 @@
                                 object = this.getWordById(element.getAttribute('data-id'))
                                 i = Array.from(line.querySelectorAll('.word')).indexOf(element)
                             }
-                            const true_id = object.id+'-'+this.file+'-'+Array.from(document.querySelectorAll('.line')).indexOf(line)
-                            +'-'+i+'-'+getElementIndex(line.textContent, element.textContent, i+1)
 
-                        if (!visited.includes(object.id)) {
-                            object.instances[this.file] = []
-                            visited.push(object.id)
-                        }
-                        if (object.instances[this.file]) {
-                            object.instances[this.file].push([
-                                object.id,
-                                this.file,
-                                Array.from(document.querySelectorAll('.line')).indexOf(line),
-                                i,
-                                getElementIndex(line.textContent, element.textContent, i+1)
-                            ])
-                        }
-                        else {
-                            object.instances[this.file] = [true_id]
-                        }
-                        element.id = true_id
+                            if (object) {
+                                const true_id = object.id+'-'+this.file+'-'+Array.from(document.querySelectorAll('.line')).indexOf(line)
+                                +'-'+i+'-'+getElementIndex(line.textContent, element.textContent, i+1)
+
+                                if (!visited.includes(object.id)) {
+                                    object.instances[this.file] = []
+                                    visited.push(object.id)
+                                }
+                                if (object.instances[this.file]) {
+                                    object.instances[this.file].push([
+                                        object.id,
+                                        this.file,
+                                        Array.from(document.querySelectorAll('.line')).indexOf(line),
+                                        i,
+                                        getElementIndex(line.textContent, element.textContent, i+1)
+                                    ])
+                                }
+                                else {
+                                    object.instances[this.file] = [true_id]
+                                }
+                                element.id = true_id
+                            }
                         })
                     })
                 })
@@ -817,20 +813,20 @@
                             //document.querySelectorAll('.active-line').forEach(e => e.classList.remove('active-line'))
                         }
                         else {
-                        if (event.key === ' ') {
-                            this.autocomplete.word = null
-                        } 
-                        else {
-                            let currentWord = getCurrentWord(this.currentLine)
-                            let textRect = document.getElementById('text-display').getBoundingClientRect()
-                            let rect = getCaretGlobalPosition()
+                            if (event.key === ' ') {
+                                this.autocomplete.word = null
+                            } 
+                            else {
+                                let currentWord = getCurrentWord(this.currentLine)
+                                let textRect = document.getElementById('text-display').getBoundingClientRect()
+                                let rect = getCaretGlobalPosition()
 
-                            this.autocomplete.word = currentWord
-                            this.autocomplete.x = rect.left - textRect.left
-                            this.autocomplete.y = rect.top - textRect.top + 30
-                            this.autocomplete.height = textRect.height -  this.autocomplete.y + 30
-                        }
-                        this.currentLine.setAttribute('data-text', this.currentLine.textContent)
+                                this.autocomplete.word = currentWord
+                                this.autocomplete.x = rect.left - textRect.left
+                                this.autocomplete.y = rect.top - textRect.top + 30
+                                this.autocomplete.height = textRect.height -  this.autocomplete.y + 30
+                            }
+                            this.currentLine.setAttribute('data-text', this.currentLine.textContent)
                             const sel = window.getSelection();
                             const node = sel.focusNode;
                             const offset = sel.focusOffset;
@@ -849,6 +845,8 @@
                             });
 
                             range.collapse(true);
+                            console.log(pos.pos)
+                            console.log(range)
                             sel.addRange(range);
                         }
                     } 
@@ -903,72 +901,47 @@
                     }
                     else if (event.key === 'Backspace') {
                         //document.documentElement.style.setProperty('--line-count', document.querySelectorAll('.line').length.toString().length);
-                    if (!document.querySelector('.line-count')) {
-                        if (document.querySelectorAll('.line').length == 0) {
-                            let lineCount = document.createElement('div')
-                            lineCount.classList.add('line-count')
-                            lineCount.style.height = '24px'
-
-                            //let line = document.getElementById('text').querySelector('.line')
-                            let lineContents = document.getElementById('text').querySelector('.line-contents')
-
-                            //line.insertBefore(lineCount, lineContents)
-
-                            placeCaretAtEnd(lineContents)
-                        }
-                        else {
-                            document.getElementById('text').innerHTML = ''
-                            let newLine = this.createLine('')
-                            this.renderMarkdown(newLine)
-                            document.getElementById('text').appendChild(newLine)
-                            placeCaretAtEnd(newLine.querySelector('.line-contents'))
-                            this.currentLine = newLine
-                            newLine.classList.add('active-line')
-                        }
-                    }
-                    else {
                         try {
-                            let currentWord = getCurrentWord(this.currentLine)
-                            let textRect = document.getElementById('text-display').getBoundingClientRect()
-                            let rect = getCaretGlobalPosition()
+                                let currentWord = getCurrentWord(this.currentLine)
+                                let textRect = document.getElementById('text-display').getBoundingClientRect()
+                                let rect = getCaretGlobalPosition()
 
-                            this.autocomplete.word = currentWord
-                            this.autocomplete.x = rect.left - textRect.left
-                            this.autocomplete.y = rect.top - textRect.top + 30
-                            this.autocomplete.height = textRect.height -  this.autocomplete.y + 30
+                                this.autocomplete.word = currentWord
+                                this.autocomplete.x = rect.left - textRect.left
+                                this.autocomplete.y = rect.top - textRect.top + 30
+                                this.autocomplete.height = textRect.height -  this.autocomplete.y + 30
 
-                                this.currentLine.setAttribute('data-text', this.currentLine.textContent)
-                                let currentLine = findSelectedDivs(document.getElementById('text'), window.getSelection().getRangeAt(0)).filter(e => e.classList.contains('line'))[0]
-                                currentLine.classList.add('active-line')
+                                    this.currentLine.setAttribute('data-text', this.currentLine.textContent)
+                                    let currentLine = findSelectedDivs(document.getElementById('text'), window.getSelection().getRangeAt(0)).filter(e => e.classList.contains('line'))[0]
+                                    currentLine.classList.add('active-line')
 
-                                let element = this.currentLine.querySelector('.line-contents')
-                                if (element.previousElementSibling) {
-                                    if (element.querySelector('h1')) {
-                                        element.previousElementSibling.style.height = '48px'
+                                    let element = this.currentLine.querySelector('.line-contents')
+                                    if (element.previousElementSibling) {
+                                        if (element.querySelector('h1')) {
+                                            element.previousElementSibling.style.height = '48px'
+                                        }
+                                        else if (element.querySelector('h2')) {
+                                            element.previousElementSibling.style.height = '36px'
+                                        }
+                                        else if (element.querySelector('h3')) {
+                                            element.previousElementSibling.style.height = '28px'
+                                        }
+                                        else if (element.querySelector('h4')) {
+                                            element.previousElementSibling.style.height = '24px'
+                                        }
+                                        else if (element.querySelector('h5')) {
+                                            element.previousElementSibling.style.height = '20px'
+                                        }
+                                        else if (element.querySelector('h6')) {
+                                            element.previousElementSibling.style.height = '16px'
+                                        }
+                                        else {
+                                            element.previousElementSibling.style.height = '24px'
+                                        }
                                     }
-                                    else if (element.querySelector('h2')) {
-                                        element.previousElementSibling.style.height = '36px'
-                                    }
-                                    else if (element.querySelector('h3')) {
-                                        element.previousElementSibling.style.height = '28px'
-                                    }
-                                    else if (element.querySelector('h4')) {
-                                        element.previousElementSibling.style.height = '24px'
-                                    }
-                                    else if (element.querySelector('h5')) {
-                                        element.previousElementSibling.style.height = '20px'
-                                    }
-                                    else if (element.querySelector('h6')) {
-                                        element.previousElementSibling.style.height = '16px'
-                                    }
-                                    else {
-                                        element.previousElementSibling.style.height = '24px'
-                                    }
-                                }
-                            }
-                            catch {
-                                null
-                            }
+                        }
+                        catch {
+                            null
                         }
                     }
                     else if ((keysPressed['a'] && keysPressed['meta']) || (keysPressed['a'] && keysPressed['ctrl'])) {
@@ -1272,6 +1245,24 @@
                         instanceObject.classList.add('active-instance')
                     }
                 },200)
+            }
+        },
+        mounted() {
+            const resizeBarMiddle = document.querySelector("#resizeBarMiddle");
+            const textContent = document.querySelector("#text-content");
+
+            resizeBarMiddle.addEventListener("mousedown", () => {
+              document.addEventListener("mousemove", resizeMapContent, false);
+              document.addEventListener("mouseup", () => {
+                document.removeEventListener("mousemove", resizeMapContent, false);
+                document.getElementById('text').removeAttribute('user-select')
+              }, false);
+            });
+
+            function resizeMapContent(e) {
+              const size = `${e.clientY + 2 - 40}px`;
+              textContent.style.height = size;
+              document.getElementById('text').setAttribute('user-select', 'none')
             }
         },
         created() {

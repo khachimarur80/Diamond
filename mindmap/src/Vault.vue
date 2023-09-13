@@ -84,6 +84,5 @@ export default {
     height: 100%;
     width: 100%;
     display: flex;
-    outline: 1px solid red;
   }
 </style>

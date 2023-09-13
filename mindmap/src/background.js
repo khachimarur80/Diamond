@@ -118,7 +118,8 @@ function createMainWindow(devPath, prodPath) {
   const window = new BrowserWindow({
     width: 1025,
     height: 800,
-    frame: false,
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 11, y: 12 },
     backgroundColor: '#262626',
     webPreferences: {
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
@@ -141,13 +142,16 @@ function createVaultWindow(devPath) {
     width: 800,
     height: 600,
     backgroundColor: '#262626',
+    titleBarStyle: 'hidden',
+    trafficLightPosition: { x: 11, y: 12 },
     frame: false,
+    resizable: false,
     webPreferences: {
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
       preload: path.join(__dirname, '../src/preload.js')
     }
   })
-
+  window.setMaximizable(false);
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + devPath)
   }
@@ -232,7 +236,6 @@ app.on('ready', async () => {
 
     //Check if directory for words exist
     if (!fs.existsSync(wordsDir)) {
-      //Create if there is none
       fs.mkdirSync(wordsDir);
     }
 
@@ -339,34 +342,6 @@ app.on('ready', async () => {
     mainWindow.on('focus', () => {
       mainWindow.webContents.executeJavaScript('document.documentElement.style.setProperty("--main-bg", "#363636")')
     });
-  });
-  //System TitleBar.vue actions
-  ipcMain.on('close-window', (event) => {
-    const window = BrowserWindow.fromWebContents(event.sender);
-    if (window) {
-      window.close();
-      if (!mainWindow && !vaultWindow) {
-        //app.quit()
-      }
-    }
-  });
-  //System TitleBar.vue actions
-  ipcMain.on('minimize-window', (event) => {
-    const window = BrowserWindow.fromWebContents(event.sender);
-    if (window) {
-      window.minimize();
-    }
-  });
-  //System TitleBar.vue actions
-  ipcMain.on('expand-window', (event) => {
-    const window = BrowserWindow.fromWebContents(event.sender);
-    if (window) {
-      if (window.isMaximized()) {
-        window.unmaximize();
-      } else {
-        window.maximize();
-      }
-    }
   });
   //Request for currentVault info
   //Request made from Main.vue for its initialization
