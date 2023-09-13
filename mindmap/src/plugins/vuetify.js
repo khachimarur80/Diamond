@@ -8,6 +8,7 @@ export default new Vuetify({
     dark: true,
     themes: {
       dark: {
+        secondary: '#A4A4A4'
       },
     },
   },

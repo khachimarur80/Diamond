@@ -630,7 +630,7 @@
                 })
 
 
-                if (element.querySelector('h1')) {
+                /*if (element.querySelector('h1')) {
                     element.previousElementSibling.style.height = '48px'
                 }
                 else if (element.querySelector('h2')) {
@@ -650,7 +650,7 @@
                 }
                 else {
                     element.previousElementSibling.style.height = '24px'
-                }
+                }*/
             },
             createLine(content) {
                 let newLine = document.createElement('div')
@@ -676,7 +676,7 @@
 
 
                 //newLine.appendChild(lineCollapseContainer)
-                newLine.appendChild(lineCount)
+                //newLine.appendChild(lineCount)
                 newLine.appendChild(lineContents)
 
                 return newLine
@@ -796,10 +796,10 @@
                                     placeCaretAtEnd(this.currentLine.querySelector('.line-contents'))
                                 }
                             }
-                            else if (event.key === 'ArrowDown' && newLine) {
+                            else if (event.key === 'ArrowDown' && newLine.nextElementSibling) {
                                 event.preventDefault()
                                 document.querySelectorAll('.active-line').forEach(element => element.classList.remove('active-line'))
-                                this.currentLine = newLine
+                                this.currentLine = newLine.nextElementSibling
                                 this.currentLine.classList.add('active-line')
 
                                 if (this.currentLine.querySelector('hr')) {
@@ -898,21 +898,21 @@
                             this.currentLine = newLine
                             this.currentLine.classList.add('active-line')
 
-                            document.documentElement.style.setProperty('--line-count', document.querySelectorAll('.line').length.toString().length);
+                            //document.documentElement.style.setProperty('--line-count', document.querySelectorAll('.line').length.toString().length);
                         }
                     }
                     else if (event.key === 'Backspace') {
-                        document.documentElement.style.setProperty('--line-count', document.querySelectorAll('.line').length.toString().length);
+                        //document.documentElement.style.setProperty('--line-count', document.querySelectorAll('.line').length.toString().length);
                     if (!document.querySelector('.line-count')) {
                         if (document.querySelectorAll('.line').length == 0) {
                             let lineCount = document.createElement('div')
-                                lineCount.classList.add('line-count')
-                                lineCount.style.height = '24px'
+                            lineCount.classList.add('line-count')
+                            lineCount.style.height = '24px'
 
-                                let line = document.getElementById('text').querySelector('.line')
-                                let lineContents = document.getElementById('text').querySelector('.line-contents')
+                            //let line = document.getElementById('text').querySelector('.line')
+                            let lineContents = document.getElementById('text').querySelector('.line-contents')
 
-                            line.insertBefore(lineCount, lineContents)
+                            //line.insertBefore(lineCount, lineContents)
 
                             placeCaretAtEnd(lineContents)
                         }
@@ -1001,6 +1001,9 @@
                                 this.autocomplete.index += 1
                             }
                         }
+                    }
+                    else {
+                        event.preventDefault()
                     }
                 }
                 else if (event.key === 'Backspace') {
@@ -1246,7 +1249,7 @@
                         this.renderMarkdown(newLine)
                         document.getElementById('text').appendChild(newLine)
                     }
-                    document.documentElement.style.setProperty('--line-count', document.querySelectorAll('.line').length.toString().length);
+                    //document.documentElement.style.setProperty('--line-count', document.querySelectorAll('.line').length.toString().length);
                 }
             },
             saveContents() {
@@ -1290,6 +1293,7 @@
                         else {
                             this.navigated = false
                         }
+                        this.loadContents()
                     }
                 }
             }

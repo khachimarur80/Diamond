@@ -6,7 +6,6 @@ import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const path = require('path');
 const fs = require('fs-extra');
-const url = require('url');
 
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
@@ -85,9 +84,6 @@ function generateTreeData(dirPath) {
 
   return readDirectoryRecursively(dirPath);
 }
-function setVaultName(vaultName) {
-  mainWindow.webContents.executeJavaScript(`localStorage.setItem('vault', '${vaultName}');`);
-}
 //Send tree data for TreeView.vue
 function handleRequestTreeData(vaultName) {
   if (mainWindow) {
@@ -133,13 +129,14 @@ function createMainWindow(devPath, prodPath) {
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + devPath)
   } else {
+    createProtocol('app')
     window.loadURL(`app://./${prodPath}`)
   }
 
   return window
 }
 
-function createVaultWindow(devPath, prodPath) {
+function createVaultWindow(devPath) {
   const window = new BrowserWindow({
     width: 800,
     height: 600,
@@ -155,7 +152,8 @@ function createVaultWindow(devPath, prodPath) {
     window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + devPath)
   }
   else {
-    window.loadURL(`app://./${prodPath}`)
+    createProtocol('app')
+    window.loadURL('app://./index.html')
   }
 
   return window
@@ -171,7 +169,7 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   //Open vaultWindow by default
   if (BrowserWindow.getAllWindows().length === 0) {
-    vaultWindow = createVaultWindow('', 'index.html')
+    vaultWindow = createVaultWindow('')
   }
 })
 
@@ -184,10 +182,10 @@ app.on('ready', async () => {
     }
   }
   //Open vaultWindow by default
-  vaultWindow = createVaultWindow('', 'index.html')
+  vaultWindow = createVaultWindow('')
 
   //Open system file dialog
-  ipcMain.on('open-file-browser', (event) => {
+  ipcMain.on('open-file-browser', () => {
     console.log("Opening file browser!")
     const options = {
       properties: ['openDirectory'],
@@ -242,7 +240,7 @@ app.on('ready', async () => {
 
     //Generate MD file for word object if there is none
     if (!fs.existsSync(mdFilePath)) {
-      fs.writeFile(mdFilePath, '', 'utf8', (err) => {
+      fs.writeFile(mdFilePath, '', 'utf8', () => {
       });
     }
 
@@ -264,7 +262,7 @@ app.on('ready', async () => {
 
     //Generate MD file for category object if there is none
     if (!fs.existsSync(mdFilePath)) {
-      fs.writeFile(mdFilePath, '', 'utf8', (err) => {
+      fs.writeFile(mdFilePath, '', 'utf8', () => {
       });
     }
 
@@ -286,7 +284,7 @@ app.on('ready', async () => {
 
     //Generate MD file for connection object if there is none
     if (!fs.existsSync(mdFilePath)) {
-      fs.writeFile(mdFilePath, '', 'utf8', (err) => {
+      fs.writeFile(mdFilePath, '', 'utf8', () => {
       });
     }
 
@@ -372,11 +370,11 @@ app.on('ready', async () => {
   });
   //Request for currentVault info
   //Request made from Main.vue for its initialization
-  ipcMain.on('vault-data', (event) => {
+  ipcMain.on('vault-data', () => {
     mainWindow.webContents.send("vault-name-response", currentVault);
   })
   //Change filename given path and value
-  ipcMain.on('request-change-filename', (event, targetFile, value) => {
+  ipcMain.on('request-change-filename', (targetFile, value) => {
   console.log("Change filename requested!");
   console.log(targetFile);
   console.log("\n");
@@ -392,7 +390,7 @@ app.on('ready', async () => {
     return;
   }
 
-  fs.rename(targetFile, newFilePath, (err) => {
+  fs.rename(targetFile, newFilePath, () => {
       mainWindow.webContents.send('change-filename-response', newFilePath);
     });
   });
@@ -419,7 +417,7 @@ app.on('ready', async () => {
     mainWindow.webContents.send('create-file-response' ,filePath)
   });
   //Folder creation on given directory
-  ipcMain.on('create-folder', (event, directory) => {
+  ipcMain.on('create-folder', (directory) => {
     const targetDirectory = getTargetDirectory(directory);
 
     if (!targetDirectory) {
@@ -441,10 +439,10 @@ app.on('ready', async () => {
     mainWindow.webContents.send('create-folder-response' ,folderPath)
   });
   //Current vault closening to open vault menu
-  ipcMain.on('exit-vault', (event, vaultName) => {
+  ipcMain.on('exit-vault', () => {
     console.log("Opening vault menu!")
     if (!vaultWindow) {
-      vaultWindow = createVaultWindow('', 'index.html')
+      vaultWindow = createVaultWindow('')
     }
     else {
       vaultWindow.focus()
@@ -462,7 +460,7 @@ app.on('ready', async () => {
 
         const newFilePath = path.join(destinyFilePath, fileName);
 
-        fs.rename(originFilePath, newFilePath, (err) => {});
+        fs.rename(originFilePath, newFilePath, () => {});
       }
     }
   });

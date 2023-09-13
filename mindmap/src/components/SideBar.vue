@@ -10,13 +10,13 @@
                             mdi-folder-arrow-left-outline
                         </v-icon>
                     </v-btn>
-                    <v-btn small icon dense>
+                    <v-btn small icon dense disabled>
                         <v-icon size="20" color="secondary" @click="userHelp">
                             mdi-help-circle-outline
                         </v-icon>
                     </v-btn>
                     
-                    <v-btn small icon dense>
+                    <v-btn small icon dense disabled>
                         <v-icon size="20" color="secondary" @click="openSettings">
                             mdi-cog-outline
                         </v-icon>
