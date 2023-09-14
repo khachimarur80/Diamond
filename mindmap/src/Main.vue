@@ -1870,6 +1870,7 @@ export default {
         display: flex;
         flex-direction: column;
         gap: 3px;
+        outline: none;
     }
     .node-menu-item {
         font-size: 14px;

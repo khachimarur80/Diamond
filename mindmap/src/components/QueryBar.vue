@@ -60,9 +60,9 @@
                     <div class="query-list">
                         <v-icon color="blue">mdi-transit-connection-horizontal</v-icon>
                         <div v-for="connection in selectedObject.connections"  :key="connection.id" class="relation-table">
-                            <span>{{ getConnectionById(connection[0]).name }}</span>
+                            <span>{{ getConnectionById(connection.connection).name }}</span>
                             <v-icon>mdi-arrow-left-right</v-icon>
-                            <span v-if="connection[1]">{{ getWordById(connection[1]).name }}</span>
+                            <span v-if="connection[1]">{{ getWordById(connection.component2).name }}</span>
                         </div>
                     </div>
                     <div class="query-button-group">
@@ -208,6 +208,27 @@
             }
         },
         methods: {
+             getWordById(id) {
+                for(let i=0; i<this.currentGroup.words.length; i++) {
+                    if (this.currentGroup.words[i].id==id) {
+                        return this.currentGroup.words[i]
+                    }
+                }
+            },
+            getCategoryById(id) {
+                for(let i=0; i<this.currentGroup.categories.length; i++) {
+                    if (this.currentGroup.categories[i].id==id) {
+                        return this.currentGroup.categories[i]
+                    }
+                }
+            },
+            getConnectionById(id) {
+                for(let i=0; i<this.currentGroup.connections.length; i++) {
+                    if (this.currentGroup.connections[i].id==id) {
+                        return this.currentGroup.connections[i]
+                    }
+                }
+            },
             //Being able to select the queryTarget (word, connection or category) by scrolling
             scrollQuery() {
                 if (this.queryTarget!=null) {
@@ -281,7 +302,7 @@
             },
             async saveCategoryName() {
                 var value = document.getElementById('selectedCategoryName').value
-                EventBus.$emit('saveConnectionName', value)
+                EventBus.$emit('saveCategoryName', value)
             },
             openFile() {
                 EventBus.$emit('openFile')

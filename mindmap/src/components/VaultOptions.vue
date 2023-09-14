@@ -87,8 +87,6 @@
             window.electronAPI.createNewVault(this.newVaultName, this.newVaultLocation)
             window.electronAPI.response('vault-creation-response', resolve)
           });
-          //Update stored vaults in localStorage
-          window.localStorage.setItem('vaults', JSON.stringify(this.vaults))
           //Add newly created vault to Vault.vue vaults prop
           this.$emit('addVault', message)
         }
@@ -112,8 +110,6 @@
         });
         //Add selected directory as vault
         this.$emit('addVault', message)
-        //Update stored vaults in localStorage
-        window.localStorage.setItem('vaults', JSON.stringify(this.vaults))
       },
       async openFileBrowser() {
         //Set progress circular while loading fileBrowser

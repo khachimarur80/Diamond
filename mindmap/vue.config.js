@@ -8,6 +8,10 @@ module.exports = defineConfig({
       preload: 'src/preload.js',
       builderOptions: {
         extraResources: ['src'],
+        appId: 'MindMap.com',
+        mac: {
+          icon: 'src/assets/app_icon.icns'
+        }
       },
     }
   },

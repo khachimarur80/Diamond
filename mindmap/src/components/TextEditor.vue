@@ -40,7 +40,8 @@
             this.connections = []
             this.instances = {}
             this.directionality = 'lr'
-            this.upgrade = false
+            this.inputs = []
+            this.outputs = ''
         }
     }
     class Word {

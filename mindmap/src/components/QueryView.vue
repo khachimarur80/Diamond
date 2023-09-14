@@ -108,16 +108,22 @@
                         </div>
 
                     </div>
-                    <div  class="query-list-row" style="flex-direction: column;">
+                    <!--<div  class="query-list-row" style="flex-direction: column;">
                         <h4>Function</h4>
-                        <v-btn v-if="!localFileQuery.upgraded" @click="localFileQuery.upgraded = true" color="blue" outlined dense>
-                            Upgrade
-                        </v-btn>
-                        <v-btn v-if="!localFileQuery.upgraded" color="warning" outlined dense @click="evaluate(localFileQuery)">
-                            Evaluate
-                        </v-btn>
+                        <p>Inputs</p>
+                          <v-autocomplete
+                            :items="combinedItems"
+                            chips
+                            clearable
+                            deletable-chips
+                            item-text="name"
+                            multiple
+                          ></v-autocomplete>
+                        <p>Code</p>
+                        <v-textarea :rows="1" outlined no-resize>
+                        </v-textarea>
                         <br>
-                    </div>
+                    </div>-->
                 </div>
                 <div class="query-list">
                     <div class="query-list-heading">
@@ -373,8 +379,6 @@
                 this.localFileQuery.words = this.localFileQuery.words.filter(w => w!=word)
             },
             removeConnection(connection) {
-                console.log(connection)
-                console.log(this.getConnectionById(connection.connection).connections)
                 this.getConnectionById(connection.connection).connections = this.getConnectionById(connection.connection).connections.filter(c => c!=connection)
                 if (this.getWordById(connection.component1)) {
                     this.getWordById(connection.component1).connections = this.getWordById(connection.component1).connections.filter(c => c!=connection)
@@ -438,6 +442,11 @@
         },
         async created() {
             this.localFileQuery = this.fileQuery
+        },
+        computed: {
+            combinedItems() {
+                return [...this.currentGroup.words, ...this.currentGroup.categories];
+            }
         }
     }
 </script>

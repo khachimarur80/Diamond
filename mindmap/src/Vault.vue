@@ -29,12 +29,13 @@ export default {
   methods: {
     //Function from VaultOptions.vue that modifies vaults prop
     addVault(vault) {
-      this.vaults.push(vault)
-      window.localStorage.setItem('vaults', JSON.stringify(this.vaults))
+      if (vault) {
+        this.vaults.push(vault)
+        window.localStorage.setItem('vaults', JSON.stringify(this.vaults))
+      }
     },
     //Function from VaultPanel.vue that modifies vaults prop
     removeVault(vault) {
-      console.log(1)
       this.vaults = this.vaults.filter(e => e!==vault)
       window.localStorage.setItem('vaults', JSON.stringify(this.vaults))
     }
@@ -51,13 +52,18 @@ export default {
       this.vaults = JSON.parse(vaultsFromLocalStorage);
 
       //Iterate through vaults if they havent been moved or deleted
-      for (let i=0; i<this.vaults.length; i++) {  
-        const message = await new Promise(resolve => {
-          window.electronAPI.pathValid(this.vaults[i].id)
-          window.electronAPI.response('path-valid-response', resolve)
-        });
-        if (!message) {
-          //Append if yes, because they are invalid
+      for (let i=0; i<this.vaults.length; i++) {
+        if (this.vaults[i]) {
+          const message = await new Promise(resolve => {
+            window.electronAPI.pathValid(this.vaults[i].id)
+            window.electronAPI.response('path-valid-response', resolve)
+          });
+          if (!message) {
+            //Append if yes, because they are invalid
+            invalidVaults.push(this.vaults[i])
+          }
+        }
+        else {
           invalidVaults.push(this.vaults[i])
         }
       }
