@@ -29,7 +29,7 @@ export default {
   methods: {
     //Function from VaultOptions.vue that modifies vaults prop
     addVault(vault) {
-      this.vaults.push({name: vault.split('/').slice(-1)[0], id: vault})
+      this.vaults.push(vault)
       window.localStorage.setItem('vaults', JSON.stringify(this.vaults))
     },
     //Function from VaultPanel.vue that modifies vaults prop

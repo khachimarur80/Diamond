@@ -18,7 +18,7 @@
                     </div>
                     <div class="query-display-contents">
                         <div>
-                            <div v-for="word in currentGroup.words" :key="word.file" @click="selectedObject=word" :style="{ color: word==selectedObject ? '#43A047' : '#fff' }">
+                            <div v-for="word in currentGroup.words" :key="word.id" @click="selectedObject=word" :style="{ color: word==selectedObject ? '#43A047' : '#fff' }">
                                 {{word.name}}
                             </div>
                         </div>
@@ -30,7 +30,7 @@
                         <v-btn icon small @click="newObject"><v-icon>mdi-plus</v-icon></v-btn>
                     </div>
                     <div class="query-display-contents">
-                        <div v-for="connection in currentGroup.connections" :key="connection.file" @click="selectedObject=connection"
+                        <div v-for="connection in currentGroup.connections" :key="connection.id" @click="selectedObject=connection"
                         :style="{ color: connection==selectedObject ? '#1976D2' : '#fff' }">
                             {{connection.name}}
                         </div>
@@ -42,7 +42,7 @@
                         <v-btn icon small @click="newObject"><v-icon>mdi-plus</v-icon></v-btn>
                     </div>
                     <div class="query-display-contents">
-                        <div v-for="group in currentGroup.categories" :key="group.file" @click="selectedObject=group" :style="{ color: group==selectedObject ? '#EF5350' : '#fff' }">
+                        <div v-for="group in currentGroup.categories" :key="group.id" @click="selectedObject=group" :style="{ color: group==selectedObject ? '#EF5350' : '#fff' }">
                             {{group.name}}
                         </div>
                     </div>
@@ -55,11 +55,11 @@
                     </div>
                     <div class="query-list">
                         <v-icon color="red">mdi-pound</v-icon>
-                        <span v-for="category in selectedObject.categories" :key="category.file">{{ getCategoryById(category).name }}</span>
+                        <span v-for="category in selectedObject.categories" :key="category.id">{{ getCategoryById(category).name }}</span>
                     </div>
                     <div class="query-list">
                         <v-icon color="blue">mdi-transit-connection-horizontal</v-icon>
-                        <div v-for="connection in selectedObject.connections"  :key="connection.file" class="relation-table">
+                        <div v-for="connection in selectedObject.connections"  :key="connection.id" class="relation-table">
                             <span>{{ getConnectionById(connection[0]).name }}</span>
                             <v-icon>mdi-arrow-left-right</v-icon>
                             <span v-if="connection[1]">{{ getWordById(connection[1]).name }}</span>
@@ -89,7 +89,7 @@
                     </div>
                     <div class="query-list">
                         <v-icon color="green">mdi-code-brackets</v-icon>
-                        <div v-for="word in selectedObject.words" :key="word" class="relation-table">
+                        <div v-for="word in selectedObject.words" :key="word.id" class="relation-table">
                             <span>{{ getWordById(word[0]).name }}</span>
                             <v-icon>mdi-arrow-left-right</v-icon>
                             <span v-if="word[1]">{{ getWordById(word[1]).name }}</span>
@@ -97,7 +97,7 @@
                     </div>
                     <div class="query-list">
                         <v-icon color="red">mdi-pound</v-icon>
-                        <span v-for="category in selectedObject.categories" :key="category">{{ getCategoryById(category).name }}</span>
+                        <span v-for="category in selectedObject.categories" :key="category.id">{{ getCategoryById(category).name }}</span>
                     </div>
                     <div class="query-button-group">
                         <v-btn @click="saveConnectionName" color="success" icon tile :disabled="!canSave">
@@ -272,6 +272,7 @@
             //Funcitons to update the objects name
             async saveWordName() {
                 var value = this.newName
+                console.log(value)
                 EventBus.$emit('saveWordName', value)
             },
             async saveConnectionName() {

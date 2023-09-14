@@ -87,10 +87,10 @@
             window.electronAPI.createNewVault(this.newVaultName, this.newVaultLocation)
             window.electronAPI.response('vault-creation-response', resolve)
           });
-          //Add newly created vault to Vault.vue vaults prop
-          this.$emit('addVault', message)
           //Update stored vaults in localStorage
           window.localStorage.setItem('vaults', JSON.stringify(this.vaults))
+          //Add newly created vault to Vault.vue vaults prop
+          this.$emit('addVault', message)
         }
         else {
           //Show error message for invalid input

@@ -2,15 +2,15 @@
     <div id="text-content">
         <div id="text-toolbar">
             <div id="sidebar-history">
-                <v-btn dense icon small @click="setHistory(1)" :disabled="historyIndex==fileHistory.length">
+                <v-btn dense icon small @click="setHistory(-1)" :disabled="historyIndex==0">
                     <v-icon small>mdi-arrow-left</v-icon>
                 </v-btn>
-                <v-btn dense icon small @click="setHistory(-1)" :disabled="historyIndex==0">
+                <v-btn dense icon small @click="setHistory(1)" :disabled="historyIndex==fileHistory.length">
                     <v-icon small>mdi-arrow-right</v-icon>
                 </v-btn>
             </div>
             <v-spacer></v-spacer>
-            <span class="file-name">
+            <span class="file-name" style="min-height: 24px;">
                 {{ this.file }}
             </span>
             <v-spacer></v-spacer>
@@ -185,37 +185,6 @@
 
         return matchIndex;
     }
-
-
-    /*function setCaretPosition(index, element) {
-        const range = document.createRange();
-        const selection = window.getSelection();
-
-        if (element.childNodes.length > 0) {
-        let currentNode = element.childNodes[0];
-        let charCount = 0;
-        while (currentNode) {
-            const nextNode = currentNode.nextSibling;
-            if (currentNode.nodeType === Node.TEXT_NODE) {
-            const nodeLength = currentNode.textContent.length;
-            if (charCount + nodeLength >= index) {
-                range.setStart(currentNode, index - charCount);
-                range.setEnd(currentNode, index - charCount);
-                break;
-            }
-            charCount += nodeLength;
-            }
-            currentNode = nextNode;
-        }
-
-        // Clear any existing selections and set the new range as the selection
-        selection.removeAllRanges();
-        selection.addRange(range);
-
-        // Focus the contenteditable element
-        element.focus();
-        }
-    }*/
 
     function wrapMarkdownSyntax(inputString) {
         const headerRegex = /^(#+)\s(.*)$/gm;
@@ -716,6 +685,42 @@
                     }
                 }
             },
+            focusObject() {
+                document.querySelectorAll('.active-object').forEach(e => e.setAttribute('contenteditable', 'false'))
+                document.querySelectorAll('.active-object').forEach(e => e.classList.remove('active-object'))
+
+                const selection = window.getSelection();
+                let caretPosition = selection.anchorOffset;
+                const currentNode = selection.anchorNode;
+
+                if (currentNode.data) {
+                    const textBeforeCaret = currentNode.data.substring(0, caretPosition);
+                    const textAfterCaret = currentNode.data.substring(caretPosition);
+
+                    if (textBeforeCaret) {
+                        if ((textBeforeCaret.trim()=='') && currentNode.previousSibling) {
+                            currentNode.previousSibling.classList.add('active-object')
+                            currentNode.previousSibling.setAttribute('contenteditable', 'true')
+                        }
+                    }
+                    if (textAfterCaret) {
+                        if ((textAfterCaret.trim()=='') && currentNode.nextSibling) {
+                            currentNode.nextSibling.classList.add('active-object')
+                            currentNode.nextSibling.setAttribute('contenteditable', 'true')
+                        }
+                    }
+                }
+                else {
+                    if (caretPosition>0) {
+                        currentNode.lastElementChild.classList.add('active-object')
+                        currentNode.lastElementChild.setAttribute('contenteditable', 'true')
+                    }
+                    else {
+                        currentNode.firstElementChild.classList.add('active-object')
+                        currentNode.firstElementChild.setAttribute('contenteditable', 'true')
+                    }
+                }
+            },
             textMouseUp(event) {
                 let target = event.target
                 if (target.classList.contains('word') || target.classList.contains('connection')) {
@@ -733,24 +738,7 @@
                     selectedLines.forEach(element => element.classList.add('active-line'))
 
                     if (selectedLines.length === 1) {
-                        const selection = window.getSelection();
-                        const caretPosition = selection.anchorOffset;
-                        const currentNode = selection.anchorNode;
-
-                        const textBeforeCaret = selectedLines[0].textContent.substring(0, caretPosition);
-                    const textAfterCaret = selectedLines[0].textContent.substring(caretPosition);
-
-                    document.querySelectorAll('.active-object').forEach(e => e.setAttribute('contenteditable', 'false'))
-                    document.querySelectorAll('.active-object').forEach(e => e.classList.remove('active-object'))
-
-                        if ((!textBeforeCaret.trim() || textBeforeCaret.trim() === ' ') && currentNode.previousSibling) {
-                            currentNode.previousSibling.classList.add('active-object')
-                            currentNode.previousSibling.setAttribute('contenteditable', 'true')
-                        }
-                        if ((!textAfterCaret.trim() || textAfterCaret.trim() === ' ') && currentNode.nextSibling) {
-                            currentNode.nextSibling.classList.add('active-object')
-                            currentNode.nextSibling.setAttribute('contenteditable', 'true')
-                        }
+                        this.focusObject()
                     }
                 }
             },
@@ -806,6 +794,9 @@
 
                                 placeCaretAtEnd(this.currentLine.querySelector('.line-contents'))
                             }
+                            else {
+                                this.focusObject()
+                            }
                         }
                     } 
                     else if (event.key.length === 1 && !(keysPressed['meta'] || keysPressed['ctrl'])) {
@@ -834,8 +825,9 @@
 
                             if (offset === 0) pos.pos += 0.5;
 
-                            
-                            this.renderMarkdown(this.currentLine)
+                            if (!'[]-'.includes(event.key)) {
+                                this.renderMarkdown(this.currentLine)
+                            }
 
                             sel.removeAllRanges();
 
@@ -845,9 +837,8 @@
                             });
 
                             range.collapse(true);
-                            console.log(pos.pos)
-                            console.log(range)
                             sel.addRange(range);
+
                         }
                     } 
                     else if (event.key === 'Tab') {
@@ -892,6 +883,8 @@
                             event.preventDefault()
                         }
                         else {
+                            document.querySelectorAll('.active-object').forEach(e => e.setAttribute('contenteditable', 'false'))
+                            document.querySelectorAll('.active-object').forEach(e => e.classList.remove('active-object'))
                             let newLine = findSelectedDivs(document.getElementById('text'), window.getSelection().getRangeAt(0)).filter(e => e.classList.contains('line'))[0]
                             this.currentLine = newLine
                             this.currentLine.classList.add('active-line')
@@ -975,7 +968,7 @@
                             }
                         }
                     }
-                    else {
+                    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
                         event.preventDefault()
                     }
                 }
@@ -1214,7 +1207,7 @@
                     window.electronAPI.response("file-data-response", resolve)
                 })
                 if (typeof message != 'string') {
-                    this.files = this.files.filter(file => file[0]!=this.file)
+                    EventBus.$emit('removeCorruptFIle')
                 }
                 else {
                     for (let i=0; i<message.split('\n').length; i++) {
@@ -1271,15 +1264,17 @@
                 this.$nextTick(()=> {
                     this.loadContents()
                 })
+                //this.fileHistory.push(this.file)
             }
         },
         watch: {
             file: {
                 deep: true,
-                handler() {
+                handler(newFile, oldFile) {
                     if (this.file) {
                         if (!this.navigated) {
-                            this.fileHistory.push(this.file)
+                            this.fileHistory.push(oldFile)
+                            this.historyIndex += 1
                         }
                         else {
                             this.navigated = false

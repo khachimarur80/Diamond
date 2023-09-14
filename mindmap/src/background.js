@@ -189,7 +189,7 @@ app.on('ready', async () => {
   vaultWindow = createVaultWindow('')
 
   //Open system file dialog
-  ipcMain.on('open-file-browser', () => {
+  ipcMain.on('open-file-browser', (event) => {
     console.log("Opening file browser!")
     const options = {
       properties: ['openDirectory'],
@@ -330,7 +330,6 @@ app.on('ready', async () => {
       vaultWindow = null;
     }
     if (mainWindow) {
-      mainWindow.close();
       mainWindow = null;
     }
     mainWindow = createMainWindow('subpage', 'subpage.html')
@@ -345,11 +344,11 @@ app.on('ready', async () => {
   });
   //Request for currentVault info
   //Request made from Main.vue for its initialization
-  ipcMain.on('vault-data', () => {
+  ipcMain.on('vault-data', (event) => {
     mainWindow.webContents.send("vault-name-response", currentVault);
   })
   //Change filename given path and value
-  ipcMain.on('request-change-filename', (targetFile, value) => {
+  ipcMain.on('request-change-filename', (event, targetFile, value) => {
   console.log("Change filename requested!");
   console.log(targetFile);
   console.log("\n");
@@ -392,7 +391,7 @@ app.on('ready', async () => {
     mainWindow.webContents.send('create-file-response' ,filePath)
   });
   //Folder creation on given directory
-  ipcMain.on('create-folder', (directory) => {
+  ipcMain.on('create-folder', (event, directory) => {
     const targetDirectory = getTargetDirectory(directory);
 
     if (!targetDirectory) {
@@ -414,7 +413,7 @@ app.on('ready', async () => {
     mainWindow.webContents.send('create-folder-response' ,folderPath)
   });
   //Current vault closening to open vault menu
-  ipcMain.on('exit-vault', () => {
+  ipcMain.on('exit-vault', (event) => {
     console.log("Opening vault menu!")
     if (!vaultWindow) {
       vaultWindow = createVaultWindow('')

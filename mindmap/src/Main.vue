@@ -68,6 +68,7 @@ export default {
         },
         vault: '', //Current vault name
         navigated: [], //History of opened files
+        fileQuery: '', //File to be opened in QueryView
     }),
 
     methods: {
@@ -565,6 +566,10 @@ export default {
         setHistory(file) {
             this.file = file
         },
+        removeCorruptFile() {
+            this.files = this.files.filter(file => file[0]!=this.file)
+            this.file = ''
+        }
     },
 
     mounted() {
@@ -611,6 +616,7 @@ export default {
         EventBus.$on('openFile', this.openFile);
         //TextEditor.vue methods    
         EventBus.$on('setHistory', this.setHistory)
+        EventBus.$on('removeCorruptFile', this.removeCorruptFile)
         //QueryView.vue  methods
         EventBus.$on('openFile', this.openFile);
 
