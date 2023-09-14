@@ -12,10 +12,14 @@ This app has several parts, with a outer structure somewhat similar to Obsidian.
 ### Current
 
 ![VaultWin](./assets/VaultWin.png)
+
 Here you decide to create a new "vault" (folder with all your .json and .md)
+
 ![CreateVault](./assets/CreateVault.png)Open a folder as "vault"
 ![OpenFolder](./assets/OpenFolder.png)
+
 Or simply open a previously opened vault
+
 ![OpenVault](./assets/OpenVault.png)
 
 ### Future
@@ -61,14 +65,23 @@ and a quick preview of the currently selected Object, where you can do small edi
 ### Current
 
 This is the left sidebar containing menu items, and a treeview.
+
 ![Sidebar](./assets/Sidebar.png)
+
 The menu items are basic buttons such as settings, or exiting current vault.
+
 ![MenuItems](./assets/MenuItems.png)
+
 The treeview provides folder structure of the current opened vault. 
+
 ![TreeView](./assets/TreeView.png)
+
 It has a couple buttons for adding folders and files.
+
 ![TreeViewMenu](./assets/TreeViewMenu.png)
+
 You can rename and move them as you please
+
 ![FileManagement](./assets/FileManagement.png) 
 
 ### Future
