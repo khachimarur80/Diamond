@@ -439,7 +439,7 @@
                 const content = line.getAttribute('data-text').replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;')
                 let element = line.querySelector('.line-contents')
 
-                element.innerHTML = marked.parse(content)
+                element.innerHTML = marked.parse(content.replace(/\n$/, ''))
 
                 if (element.firstElementChild) {
                     if (element.firstElementChild.tagName=='HR') {
@@ -883,6 +883,7 @@
                             event.preventDefault()
                         }
                         else {
+                            event.preventDefault()
                             document.querySelectorAll('.active-object').forEach(e => e.setAttribute('contenteditable', 'false'))
                             document.querySelectorAll('.active-object').forEach(e => e.classList.remove('active-object'))
                             let newLine = findSelectedDivs(document.getElementById('text'), window.getSelection().getRangeAt(0)).filter(e => e.classList.contains('line'))[0]
@@ -895,43 +896,43 @@
                     else if (event.key === 'Backspace') {
                         //document.documentElement.style.setProperty('--line-count', document.querySelectorAll('.line').length.toString().length);
                         try {
-                                let currentWord = getCurrentWord(this.currentLine)
-                                let textRect = document.getElementById('text-display').getBoundingClientRect()
-                                let rect = getCaretGlobalPosition()
+                            let currentWord = getCurrentWord(this.currentLine)
+                            let textRect = document.getElementById('text-display').getBoundingClientRect()
+                            let rect = getCaretGlobalPosition()
 
-                                this.autocomplete.word = currentWord
-                                this.autocomplete.x = rect.left - textRect.left
-                                this.autocomplete.y = rect.top - textRect.top + 30
-                                this.autocomplete.height = textRect.height -  this.autocomplete.y + 30
+                            this.autocomplete.word = currentWord
+                            this.autocomplete.x = rect.left - textRect.left
+                            this.autocomplete.y = rect.top - textRect.top + 30
+                            this.autocomplete.height = textRect.height -  this.autocomplete.y + 30
 
-                                    this.currentLine.setAttribute('data-text', this.currentLine.textContent)
-                                    let currentLine = findSelectedDivs(document.getElementById('text'), window.getSelection().getRangeAt(0)).filter(e => e.classList.contains('line'))[0]
-                                    currentLine.classList.add('active-line')
+                                this.currentLine.setAttribute('data-text', this.currentLine.textContent)
+                                let currentLine = findSelectedDivs(document.getElementById('text'), window.getSelection().getRangeAt(0)).filter(e => e.classList.contains('line'))[0]
+                                currentLine.classList.add('active-line')
 
-                                    let element = this.currentLine.querySelector('.line-contents')
-                                    if (element.previousElementSibling) {
-                                        if (element.querySelector('h1')) {
-                                            element.previousElementSibling.style.height = '48px'
-                                        }
-                                        else if (element.querySelector('h2')) {
-                                            element.previousElementSibling.style.height = '36px'
-                                        }
-                                        else if (element.querySelector('h3')) {
-                                            element.previousElementSibling.style.height = '28px'
-                                        }
-                                        else if (element.querySelector('h4')) {
-                                            element.previousElementSibling.style.height = '24px'
-                                        }
-                                        else if (element.querySelector('h5')) {
-                                            element.previousElementSibling.style.height = '20px'
-                                        }
-                                        else if (element.querySelector('h6')) {
-                                            element.previousElementSibling.style.height = '16px'
-                                        }
-                                        else {
-                                            element.previousElementSibling.style.height = '24px'
-                                        }
+                                let element = this.currentLine.querySelector('.line-contents')
+                                if (element.previousElementSibling) {
+                                    if (element.querySelector('h1')) {
+                                        element.previousElementSibling.style.height = '48px'
                                     }
+                                    else if (element.querySelector('h2')) {
+                                        element.previousElementSibling.style.height = '36px'
+                                    }
+                                    else if (element.querySelector('h3')) {
+                                        element.previousElementSibling.style.height = '28px'
+                                    }
+                                    else if (element.querySelector('h4')) {
+                                        element.previousElementSibling.style.height = '24px'
+                                    }
+                                    else if (element.querySelector('h5')) {
+                                        element.previousElementSibling.style.height = '20px'
+                                    }
+                                    else if (element.querySelector('h6')) {
+                                        element.previousElementSibling.style.height = '16px'
+                                    }
+                                    else {
+                                        element.previousElementSibling.style.height = '24px'
+                                    }
+                                }
                         }
                         catch {
                             null
@@ -952,6 +953,7 @@
                             })
                     }
                 }
+                this.saveContents()
             },
             textKeyDown(event) {
                 if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
@@ -1031,51 +1033,51 @@
                     let currentLine = currentLines[0]
 
                     if (currentLines.length===1) {
-                    if (this.autocomplete.word && this.autocompleteItems.length>0) {
-                        event.preventDefault()
-                        let selection = window.getSelection();
-                            if (selection.rangeCount > 0) {
-                            let range = selection.getRangeAt(0);
-                            this.autocomplete.caret = {
-                            containerNode: range.startContainer,
-                            offset: range.startOffset
-                        };
-                            }
-                        this.completeText(this.autocompleteItems[this.autocomplete.index])
-                        this.autocomplete.word = null
-                    }
-                    else if (currentLine.innerHTML!='<br>') {
-                        event.preventDefault()
-                        let newLine = this.createLine('')
-                        this.renderMarkdown(newLine)
-
-                        while (!currentLine.classList.contains('line')) {
-                            currentLine = currentLine.parentElement
-                            if (!currentLine) {
-                                break
-                            }
+                        if (this.autocomplete.word && this.autocompleteItems.length>0) {
+                            event.preventDefault()
+                            let selection = window.getSelection();
+                                if (selection.rangeCount > 0) {
+                                let range = selection.getRangeAt(0);
+                                this.autocomplete.caret = {
+                                containerNode: range.startContainer,
+                                offset: range.startOffset
+                            };
+                                }
+                            this.completeText(this.autocompleteItems[this.autocomplete.index])
+                            this.autocomplete.word = null
                         }
+                        else if (currentLine.innerHTML!='<br>') {
+                            event.preventDefault()
+                            let newLine = this.createLine('')
+                            this.renderMarkdown(newLine)
 
-                        document.querySelectorAll('.active-line').forEach(element => element.classList.remove('active-line'))
-                        currentLine.insertAdjacentElement('afterend', newLine);
+                            while (!currentLine.classList.contains('line')) {
+                                currentLine = currentLine.parentElement
+                                if (!currentLine) {
+                                    break
+                                }
+                            }
 
-                        this.currentLine = newLine
-                        this.currentLine.classList.add('active-line')
-                        placeCaretAtEnd(newLine.querySelector('.line-contents'))
-                    }
-                    else {
-                        let newLine = findSelectedDivs(document.getElementById('text'), window.getSelection().getRangeAt(0)).filter(e => e.classList.contains('line'))[0]
-                        newLine.classList.remove('active-line')
-                    }
+                            document.querySelectorAll('.active-line').forEach(element => element.classList.remove('active-line'))
+                            currentLine.insertAdjacentElement('afterend', newLine);
+
+                            this.currentLine = newLine
+                            this.currentLine.classList.add('active-line')
+                            placeCaretAtEnd(newLine.querySelector('.line-contents'))
+                        }
+                        else {
+                            let newLine = findSelectedDivs(document.getElementById('text'), window.getSelection().getRangeAt(0)).filter(e => e.classList.contains('line'))[0]
+                            newLine.classList.remove('active-line')
+                        }
                     }
                     else {
                         event.preventDefault()
-                    const sel = window.getSelection();
-                    const range = sel.getRangeAt(0);
-                    const firstLine = range.startContainer;
-                    const lastLine = range.endContainer;
-                    const firstLineIndex = range.startOffset + currentLines[0].innerText.length - firstLine.length;
-                    const lastLineIndex = range.endOffset + currentLines[currentLines.length-1].innerText.length - lastLine.length;
+                        const sel = window.getSelection();
+                        const range = sel.getRangeAt(0);
+                        const firstLine = range.startContainer;
+                        const lastLine = range.endContainer;
+                        const firstLineIndex = range.startOffset + currentLines[0].innerText.length - firstLine.length;
+                        const lastLineIndex = range.endOffset + currentLines[currentLines.length-1].innerText.length - lastLine.length;
 
                         let lastLineText = currentLines[currentLines.length-1].getAttribute('data-text').slice(lastLineIndex)
 
@@ -1223,9 +1225,10 @@
                     var textContent = []
                     var lines = document.querySelectorAll('.line')
                     for (let i=0; i<lines.length; i++) {
+                        console.log(textContent)
                         textContent.push(lines[i].getAttribute('data-text')
                             //.replace('&nbsp;&nbsp;&nbsp;&nbsp;', '\t')
-                            .replace(/\n$/, '')
+                            .replace(/\s*$/, '')
                         )
                     }
                     window.electronAPI.requestSaveFile(this.file, textContent.join('\n'))
