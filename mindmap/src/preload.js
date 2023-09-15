@@ -21,7 +21,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   moveFileRequest: (filepath, destinypath) => ipcRenderer.send('move-file-request', filepath, destinypath),
   pathValid: (path) => ipcRenderer.send('path-valid', path),
   requestVaultData: () => ipcRenderer.send('vault-data'),
-
+  requestFileUpdate: (file, oldVal, newVal) => ipcRenderer.send('file-update-request', file, oldVal, newVal),
+  registerFunctionCall: (file, text) => ipcRenderer.send('register-function-call', file, text),
   //One function for all background.js responses for rendere process
   response: (channel, listener) => {
     const onceListener = (event, ...args) => {

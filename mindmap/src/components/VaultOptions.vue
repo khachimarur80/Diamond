@@ -26,18 +26,18 @@
                 <v-text-field prepend-inner-icon="mdi-file" label="Choose file name" v-model="newVaultName" clearable ></v-text-field>
                 <v-text-field prepend-inner-icon="mdi-folder" v-model="newVaultLocation" v-if="newVaultLocation" readonly></v-text-field><br>
                 <div style="display: flex; justify-content: center; margin-top: -20px; margin-bottom: 20px;">
-                  <v-btn :color="!newVaultLocation ? '#628DD0 ': '#363636'" @click="openFileBrowser">Select a location</v-btn>
+                  <v-btn :color="!newVaultLocation ? '#628DD0': '#363636'" @click="openFileBrowser">Select a location</v-btn>
                 </div>
                 <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
                 <p v-else>&nbsp;</p>
                 <v-card-actions>
                   <v-spacer></v-spacer>
-                    <v-btn color="error" @click="createVault = false">Cancel</v-btn>
+                    <v-btn color="primary" @click="createVault = false">Cancel</v-btn>
                     <v-btn color="success" @click="createVaultFunc">Create</v-btn>
                 </v-card-actions>
               </div>
               <div v-else style="display: flex; justify-content: center; align-items: center; height: 300px; width: 100%; overflow: hidden;">
-                <v-progress-circular :size="50" color="error" indeterminate></v-progress-circular>
+                <v-progress-circular :size="50" color="primary" indeterminate></v-progress-circular>
               </div>
             </v-card>
           </v-dialog>
@@ -109,7 +109,7 @@
           this.waiting = false
         });
         //Add selected directory as vault
-        this.$emit('addVault', message)
+        this.$emit('addVault', {id: message, name: message.split('/').slice(-1)[0]})
       },
       async openFileBrowser() {
         //Set progress circular while loading fileBrowser

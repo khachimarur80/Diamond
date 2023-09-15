@@ -175,18 +175,18 @@ export default {
         },
         //Save content of current file in MD
         saveContents() {
-			if (this.file) {
-				var textContent = []
-				var lines = document.querySelectorAll('.line')
-				for (let i=0; i<lines.length; i++) {
-					textContent.push(lines[i].getAttribute('data-text')
-						//.replace('&nbsp;&nbsp;&nbsp;&nbsp;', '\t')
-						.replace(/\n$/, '')
-					)
-				}
-				window.electronAPI.requestSaveFile(this.file, textContent.join('\n'))
-			}
-		},
+            if (this.file) {
+                var textContent = []
+                var lines = document.querySelectorAll('.line')
+                for (let i=0; i<lines.length; i++) {
+                    textContent.push(lines[i].textContent
+                        .replace('&nbsp;', ' ')
+                        .replace(/\s*$/, '')
+                    )
+                }
+                window.electronAPI.requestSaveFile(this.file, textContent.join('\n'))
+            }
+        },
 
         // ----------------------------------------- COMPONENT METHODS ---------------------------------------- //
 
@@ -418,12 +418,18 @@ export default {
                     let category = this.getCategoryById(this.selectedObject.categories[i])
                     category.connections = category.connectionsObj.filter(connection => connection!=this.selectedObject.id)
                 }
-                for (let i=0; i<this.selectedObject.words.length;i++) {
-                    var word1 = this.getWordById(this.selectedObject.words[i][0])
-                    var word2 = this.getWordById(this.selectedObject.words[i][1])
+                for (let i=0; i<this.selectedObject.connections.length;i++) {
+                    var word1 = this.getWordById(this.selectedObject.connections[i].component1)
+                    var word2 = this.getWordById(this.selectedObject.connections[i].component2)
+                    if (!word1) {
+                        word1 = this.getCategoryById(this.selectedObject.connections[i].component1)
+                    }
+                    if (!word2) {
+                        word2 = this.getCategoryById(this.selectedObject.connections[i].component2)
+                    }
 
-                    word1.connections = word1.connections.filter(connection => !connection.includes(this.selectedObject.id))
-                    word2.connections = word2.connections.filter(connection => !connection.includes(this.selectedObject.id)) 
+                    word1.connections = word1.connections.filter(connection => connection!=this.selectedObject.connections[i])
+                    word2.connections = word2.connections.filter(connection => connection!=this.selectedObject.connections[i]) 
                 }
                 if (this.file==this.selectedObject.file) {
                     this.files = this.files.filter(file => file[0]!=this.file)
@@ -474,6 +480,12 @@ export default {
                 document.getElementById(this.selectedObject.id).textContent = value
             }
 
+            const keys = Object.keys(wordTarget.instances);
+
+            for (let i=0; i<keys.length; i++) {
+                window.electronAPI.requestFileUpdate(keys[i], '['+wordTarget.name+']', '['+value+']')
+            }
+
             wordTarget.name = value
 
             const message = await new Promise(resolve => {
@@ -481,9 +493,7 @@ export default {
                 window.electronAPI.response('change-filename-response', resolve)
             })
 
-            if (wordTarget.file==this.file) {
-                this.file = message
-            }
+
             this.files = this.files.map(tab => {
             if (tab.includes(wordTarget.file)) {
                 return [this.file, this.file.split('/')[this.file.split('/').length-1]]
@@ -511,6 +521,10 @@ export default {
                 document.getElementById(this.selectedObject.id).textContent = value
             }
 
+            for (const file in connectionTarget.instances) {
+                window.electronAPI.requestFileUpdate(file, '-'+connectionTarget.name+'-', '-'+value+'-')
+            }
+
             connectionTarget.name = value
 
             const message = await new Promise(resolve => {
@@ -518,9 +532,6 @@ export default {
                 window.electronAPI.response('change-filename-response', resolve)
             })
 
-            if (connectionTarget.file==this.file) {
-                this.file = message
-            }
             this.files = this.files.map(tab => {
             if (tab.includes(connectionTarget.file)) {
                 return [this.file, this.file.split('/')[this.file.split('/').length-1]]
@@ -569,6 +580,33 @@ export default {
         removeCorruptFile() {
             this.files = this.files.filter(file => file[0]!=this.file)
             this.file = ''
+        },
+        deleteInstance(instance) {
+            const object = instance.split('-')
+            const word = this.getWordById(object[0])
+            const connection = this.getConnectionById(object[0])
+            if (word && word.instances[this.file]) {
+                for (let i=0; i<word.instances[this.file].length; i++) {
+                    if (word.instances[this.file][i].join('-')==instance) {
+                        word.instances[this.file].splice(i,1)
+                        if (word.instances[this.file].length==0) {
+                            delete word.instances[this.file]
+                        }
+                        break
+                    }
+                }
+            }
+            if (connection && connection.instances[this.file]) {
+                for (let i=0; i<connection.instances[this.file].length; i++) {
+                    if (connection.instances[this.file][i].join('-')==instance) {
+                        connection.instances[this.file].splice(i,1)
+                        if (connection.instances[this.file].length==0) {
+                            delete connection.instances[this.file]
+                        }
+                        break
+                    }
+                }
+            }
         }
     },
 
@@ -617,6 +655,7 @@ export default {
         //TextEditor.vue methods    
         EventBus.$on('setHistory', this.setHistory)
         EventBus.$on('removeCorruptFile', this.removeCorruptFile)
+        EventBus.$on('deleteInstance', this.deleteInstance)
         //QueryView.vue  methods
         EventBus.$on('openFile', this.openFile);
 
@@ -1526,7 +1565,7 @@ export default {
 
 
     .autocomplete-container {
-    max-width: 200px;
+        max-width: 200px;
     }
 
 
@@ -1568,9 +1607,9 @@ export default {
     }
     .relation-table span {
         width: 50%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     #sidebar-history {
         width: fit-content;

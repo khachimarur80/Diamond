@@ -108,22 +108,32 @@
                         </div>
 
                     </div>
-                    <!--<div  class="query-list-row" style="flex-direction: column;">
+                    <div  class="query-list-row" style="flex-direction: column;">
                         <h4>Function</h4>
                         <p>Inputs</p>
-                          <v-autocomplete
-                            :items="combinedItems"
-                            chips
-                            clearable
-                            deletable-chips
-                            item-text="name"
-                            multiple
-                          ></v-autocomplete>
+                          <v-text-field
+                                v-model="localFileQuery.inputs"
+                                hide-details
+                                single-line
+                                type="number"
+                            />
                         <p>Code</p>
-                        <v-textarea :rows="1" outlined no-resize>
-                        </v-textarea>
+                        <div style="width: 80%;" v-for="(output, i) in localFileQuery.outputs" :key="i">
+                            <v-text-field
+                                v-model="localFileQuery.outputs[i]"
+                                :data-id="i"
+                                outlined 
+                                no-resize 
+                                dense 
+                                hide-details 
+                                @keydown.enter="localFileQuery.outputs.push('')"
+                                @keydown.backspace="removeOutput(i)"
+                                autofocus
+                            >
+                            </v-text-field>
+                        </div>
                         <br>
-                    </div>-->
+                    </div>
                 </div>
                 <div class="query-list">
                     <div class="query-list-heading">
@@ -312,6 +322,17 @@
             },
         },
         methods: {
+            removeOutput(i) {
+                if (this.localFileQuery.outputs.length>1 && this.localFileQuery.outputs[i]=='') {
+                    this.localFileQuery.outputs.splice(i,1)
+                    if (i!=0) {
+                        document.querySelector("[data-id='"+(i-1)+"']").focus()
+                    }
+                    else {
+                        document.querySelector('[data-id="0"]').focus()
+                    }
+                }
+            },
             getWordById(id) {
                 for(let i=0; i<this.currentGroup.words.length; i++) {
                     if (this.currentGroup.words[i].id==id) {

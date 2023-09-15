@@ -115,7 +115,7 @@ function handleRequestFileData(fileName) {
 
 function createMainWindow(devPath, prodPath) {
   // Create the browser window.
-  const window = new BrowserWindow({
+  let win = new BrowserWindow({
     width: 1025,
     height: 800,
     titleBarStyle: 'hidden',
@@ -128,17 +128,17 @@ function createMainWindow(devPath, prodPath) {
   })
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
-    window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + devPath)
+    win.loadURL(process.env.WEBPACK_DEV_SERVER_URL + devPath)
   } else {
     createProtocol('app')
-    window.loadURL(`app://./${prodPath}`)
+    win.loadURL(`app://./${prodPath}`)
   }
 
-  return window
+  return win
 }
 
 function createVaultWindow(devPath) {
-  const window = new BrowserWindow({
+  let win = new BrowserWindow({
     width: 800,
     height: 600,
     backgroundColor: '#262626',
@@ -151,16 +151,16 @@ function createVaultWindow(devPath) {
       preload: path.join(__dirname, '../src/preload.js')
     }
   })
-  window.setMaximizable(false);
+  win.setMaximizable(false);
   if (process.env.WEBPACK_DEV_SERVER_URL) {
-    window.loadURL(process.env.WEBPACK_DEV_SERVER_URL + devPath)
+    win.loadURL(process.env.WEBPACK_DEV_SERVER_URL + devPath)
   }
   else {
     createProtocol('app')
-    window.loadURL('app://./index.html')
+    win.loadURL('app://./index.html')
   }
 
-  return window
+  return win
 }
 
 
@@ -326,10 +326,11 @@ app.on('ready', async () => {
     console.log("Opening vault "+vaultName+"!\n")
     currentVault = vaultName
     if (vaultWindow) {
-      vaultWindow.close();
+      vaultWindow.close()
       vaultWindow = null;
     }
     if (mainWindow) {
+      mainWindow.close()
       mainWindow = null;
     }
     mainWindow = createMainWindow('subpage', 'subpage.html')
@@ -347,6 +348,16 @@ app.on('ready', async () => {
   ipcMain.on('vault-data', (event) => {
     mainWindow.webContents.send("vault-name-response", currentVault);
   })
+  ipcMain.on('register-function-call', (event, file, text) => {
+    fs.appendFile(file, text, (err) => {})
+  })
+  ipcMain.on('file-update-request', (event, file, oldVal, newVal) => {
+    fs.readFile(file, 'utf8', (err, data) => {
+      const updatedContent = data.replace(oldVal, newVal);
+      fs.writeFile(file, updatedContent, 'utf8', (err) => {
+      });
+    });
+  });
   //Change filename given path and value
   ipcMain.on('request-change-filename', (event, targetFile, value) => {
   console.log("Change filename requested!");

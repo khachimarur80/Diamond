@@ -16,10 +16,10 @@
             <v-spacer></v-spacer>
         </div>
         <div id="text-display">
-            <div id="text" contenteditable v-show="file" @mousedown="textMouseDown" @keydown="textKeyDown" @keyup="textKeyUp" @blur="textBlur" @mouseup="textMouseUp" @paste="textPaste">
+            <div id="text" contenteditable v-show="file" @mousedown="textMouseDown" @keydown="textKeyDown" @keyup="textKeyUp" @mouseup="textMouseUp" @paste="textPaste" @textblur="textBlur">
             </div>
             <div id="autocomplete" v-if="autocomplete.word && autocompleteItems.length" :style="{ top: autocomplete.y + 'px', left: autocomplete.x + 'px', maxHeight: autocomplete.height + 'px'}">
-                <div v-for="(item, i) in autocompleteItems" :key="i" @click="completeText(item)" :class="{ selectedPrediction: autocomplete.index == i }" class="prediction">{{ item.name }}</div>
+                <div v-for="(item, i) in autocompleteItems" :key="i" :class="{ selectedPrediction: autocomplete.index == i }" class="prediction">{{ item.name }}</div>
             </div>
         </div>
         <div id="resizeBarMiddle">
@@ -40,8 +40,8 @@
             this.connections = []
             this.instances = {}
             this.directionality = 'lr'
-            this.inputs = []
-            this.outputs = ''
+            this.inputs = 1
+            this.outputs = ['']
         }
     }
     class Word {
@@ -188,14 +188,11 @@
     }
 
     function wrapMarkdownSyntax(inputString) {
-        const headerRegex = /^(#+)\s(.*)$/gm;
+        const headerRegex = /^(#+)+(.*)$/gm;
         const lineRegex = /^---+$/gm;
         const emphasisRegex = /(_.*?_)/g;
-        const strongRegex = /(\*\*.*?\*\*)/g;
+        const strongRegex = /(\*\*)(.*?)(\*\*)/g;
         const strikeThroughRegex = /~~.*?~~/g; 
-        const emphasisRegex2 = /(_)/g;
-        const strongRegex2 = /(\*\*)/g;
-        const strikeThroughRegex2 = /~~/g;
         const tabRegex = /^\t(.*)$/gm;
 
         const wrappedString = inputString
@@ -204,11 +201,8 @@
             //.replace(listRegex, '<span class="md-code">$1</span>')
             //.replace(orderedListRegex, '<span class="md-code">$1</span>$2')
             .replace(emphasisRegex, '<em>$&</em>')
-            .replace(strongRegex, '<strong>$&</strong>')
+            .replace(strongRegex, '<span class="md-code">$1</span><strong>$2</strong><span class="md-code">$3</span>')
             .replace(strikeThroughRegex, '<del>$&</del>')
-            .replace(emphasisRegex2, '<span class="md-code md-style">$&</span>')
-            .replace(strongRegex2, '<span class="md-code md-style">$&</span>')
-            .replace(strikeThroughRegex2, '<span class="md-code md-style">$&</span>')
             .replace(tabRegex, '<span class="md-tab">$&</span>')
 
         return wrappedString;
@@ -280,6 +274,7 @@
                 word: null,
                 height: 150,
             },
+            validInstances : []
         }),
         props: {
             file: {
@@ -429,7 +424,7 @@
                     selection.addRange(range);
 
                     this.autocomplete.caret = null;
-                    }
+                }
 
                 this.autocomplete.caret = null;
                 this.autocomplete.word = null
@@ -439,9 +434,7 @@
             async renderMarkdown(line) {
                 const content = line.getAttribute('data-text').replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;')
                 let element = line.querySelector('.line-contents')
-
                 element.innerHTML = marked.parse(content.replace(/\n$/, ''))
-
                 if (element.firstElementChild) {
                     if (element.firstElementChild.tagName=='HR') {
                         element.innerHTML = marked.parse(content)
@@ -453,8 +446,10 @@
                     }
                     else  {
                         element.firstElementChild.innerHTML = wrapMarkdownSyntax(content
-                            .replace(/\[([A-Za-z0-9\s]+)\]/g, '<span class="word" contenteditable="false"><span>[</span>$1<span>]</span></span>')
-                .replace(/-([A-Za-z0-9\s]+)-/g, '<span class="connection" contenteditable="false"><span>-</span>$1<span>-</span></span>'))
+                        .replace(/\[([^\]]+)\]/g, '<span class="word" contenteditable="false"><span>[</span>$1<span>]</span></span>')
+                        .replace(/-([^-]+)-/g, '<span class="connection" contenteditable="false"><span>-</span>$1<span>-</span></span>')
+
+                        )
                     }
                 }
                 else {
@@ -589,34 +584,12 @@
                                 else {
                                     object.instances[this.file] = [true_id]
                                 }
+                                this.validInstances.push(true_id)
                                 element.id = true_id
                             }
                         })
                     })
                 })
-
-
-                /*if (element.querySelector('h1')) {
-                    element.previousElementSibling.style.height = '48px'
-                }
-                else if (element.querySelector('h2')) {
-                    element.previousElementSibling.style.height = '36px'
-                }
-                else if (element.querySelector('h3')) {
-                    element.previousElementSibling.style.height = '28px'
-                }
-                else if (element.querySelector('h4')) {
-                    element.previousElementSibling.style.height = '24px'
-                }
-                else if (element.querySelector('h5')) {
-                    element.previousElementSibling.style.height = '20px'
-                }
-                else if (element.querySelector('h6')) {
-                    element.previousElementSibling.style.height = '16px'
-                }
-                else {
-                    element.previousElementSibling.style.height = '24px'
-                }*/
             },
             createLine(content) {
                 let newLine = document.createElement('div')
@@ -646,10 +619,6 @@
                 newLine.appendChild(lineContents)
 
                 return newLine
-            },
-            textBlur(event) {
-                event.stopPropagation()
-                this.autocomplete.word = null
             },
             textMouseDown(event) {
                 if (document.querySelector('.active-instance')) {
@@ -721,6 +690,10 @@
                         currentNode.firstElementChild.setAttribute('contenteditable', 'true')
                     }
                 }
+            },
+            textBlur(event) {
+                event.stopPropagation()
+                this.autocomplete.word = null
             },
             textMouseUp(event) {
                 let target = event.target
@@ -806,7 +779,9 @@
                         }
                         else {
                             if (event.key === ' ') {
+                                event.preventDefault()
                                 this.autocomplete.word = null
+                                this.currentLine.setAttribute('data-text', this.currentLine.textContent+'&nbsp;')
                             } 
                             else {
                                 let currentWord = getCurrentWord(this.currentLine)
@@ -817,8 +792,8 @@
                                 this.autocomplete.x = rect.left - textRect.left
                                 this.autocomplete.y = rect.top - textRect.top + 30
                                 this.autocomplete.height = textRect.height -  this.autocomplete.y + 30
+                                this.currentLine.setAttribute('data-text', this.currentLine.textContent)
                             }
-                            this.currentLine.setAttribute('data-text', this.currentLine.textContent)
                             const sel = window.getSelection();
                             const node = sel.focusNode;
                             const offset = sel.focusOffset;
@@ -847,17 +822,20 @@
                             event.preventDefault()
                             let selection = window.getSelection();
                             if (selection.rangeCount > 0) {
-                            let range = selection.getRangeAt(0);
-                            this.autocomplete.caret = {
-                            containerNode: range.startContainer,
-                            offset: range.startOffset
-                        };
+                                let range = selection.getRangeAt(0);
+                                this.autocomplete.caret = {
+                                    containerNode: range.startContainer,
+                                    offset: range.startOffset
+                                };
                             }
-                        this.completeText(this.autocompleteItems[this.autocomplete.index])
+                            this.completeText(this.autocompleteItems[this.autocomplete.index])
                         }
                         else {
                             event.preventDefault()
-                            this.currentLine.setAttribute('data-text', this.currentLine.textContent.replace(/\n$/, '') + '&nbsp;&nbsp;&nbsp;&nbsp;')
+                            let selection = window.getSelection();
+                            let caretPosition = selection.anchorOffset;
+
+                            this.currentLine.setAttribute('data-text', this.currentLine.textContent.substring(0,caretPosition) + '&nbsp;&nbsp;&nbsp;&nbsp;' + this.currentLine.textContent.substring(caretPosition))
                             const sel = window.getSelection();
                             const node = sel.focusNode;
                             const offset = sel.focusOffset;
@@ -895,7 +873,11 @@
                         }
                     }
                     else if (event.key === 'Backspace') {
-                        //document.documentElement.style.setProperty('--line-count', document.querySelectorAll('.line').length.toString().length);
+                        for (let i=0; i<this.validInstances.length; i++) {
+                            if (!document.getElementById(this.validInstances[i])) {
+                                EventBus.$emit('deleteInstance', this.validInstances[i])
+                            }
+                        }
                         try {
                             let currentWord = getCurrentWord(this.currentLine)
                             let textRect = document.getElementById('text-display').getBoundingClientRect()
@@ -948,10 +930,10 @@
                 else {
                     if (event.key === 'Tab') {
                         event.preventDefault()
-                            currentLines.forEach(line => {
-                                line.setAttribute('data-text', '&nbsp;&nbsp;&nbsp;&nbsp;' + line.textContent.replace(/\n$/, ''))
-                                this.renderMarkdown(line)
-                            })
+                        currentLines.forEach(line => {
+                            line.setAttribute('data-text', '&nbsp;&nbsp;&nbsp;&nbsp;' + line.textContent)
+                            this.renderMarkdown(line)
+                        })
                     }
                 }
                 this.saveContents()
@@ -1203,6 +1185,7 @@
 
             },
             async loadContents() {
+                alert('Loading File!')
                 document.getElementById('text').innerHTML = ''
                 this.textViewMode = 'edit'
                 const message = await new Promise(resolve => {
@@ -1220,15 +1203,47 @@
                     }
                     //document.documentElement.style.setProperty('--line-count', document.querySelectorAll('.line').length.toString().length);
                 }
+
+                const regex = /([\w\-!@#]+)\(([^)]+)\)/g;
+
+                const matches = [];
+
+                let match;
+                while ((match = regex.exec(message)) !== null) {
+                  matches.push(match[0]);
+                }
+
+                for (let i=0; i<matches.length; i++) {
+                    const name = matches[i].split('(')[0]
+                    const inputs = matches[i].split('(')[1].slice(0,-1).split(',')
+                    const functionObj = this.currentGroup.connections.filter(e => e.name==name)[0]
+                    const outputs = []
+                    const file = this.file
+                    const currentDate = new Date()
+                    const date = `${currentDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })} at ${currentDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+
+                    if (functionObj) {
+                        for (let j=0; j<functionObj.outputs.length; j++) {
+                            let output = functionObj.outputs[j]
+                            for (let k=0; k<functionObj.inputs+1; k++) {
+                                output = output.replace('$'+k, inputs[k-1])
+                            }
+                            outputs.push('    '+output)
+                        }
+                    }
+                    let text = '\n---\n'
+                    text += 'Output in '+file+' at '+date+'\n'
+                    text += outputs.join('\n')
+                    window.electronAPI.registerFunctionCall(functionObj.file, text)
+                }
             },
             saveContents() {
                 if (this.file) {
                     var textContent = []
                     var lines = document.querySelectorAll('.line')
                     for (let i=0; i<lines.length; i++) {
-                        console.log(textContent)
                         textContent.push(lines[i].getAttribute('data-text')
-                            //.replace('&nbsp;&nbsp;&nbsp;&nbsp;', '\t')
+                            .replace('&nbsp;', ' ')
                             .replace(/\s*$/, '')
                         )
                     }
@@ -1269,6 +1284,25 @@
                     this.loadContents()
                 })
                 //this.fileHistory.push(this.file)
+            }
+
+            for (let i=0; i<this.currentGroup.words.length; i++) {
+                if (this.currentGroup.words[i].instances[this.file]) {
+                    this.currentGroup.words[i].instances[this.file].forEach(object => {
+                        const true_id = object.join('-')
+                        this.validInstances.push(true_id)
+                    })
+
+                }
+            }
+            for (let i=0; i<this.currentGroup.connections.length; i++) {
+                if (this.currentGroup.connections[i].instances[this.file]) {
+                    this.currentGroup.connections[i].instances[this.file].forEach(object => {
+                        const true_id = object.join('-')
+                        this.validInstances.push(true_id)
+                    })
+
+                }
             }
         },
         watch: {

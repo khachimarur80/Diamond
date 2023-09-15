@@ -179,6 +179,8 @@
             this.instances = {}
             this.directionality = 'lr'
             this.upgrade = false
+            this.outputs = ['']
+            this.inputs = 1
         }
     }
 
@@ -293,7 +295,6 @@
             //Funcitons to update the objects name
             async saveWordName() {
                 var value = this.newName
-                console.log(value)
                 EventBus.$emit('saveWordName', value)
             },
             async saveConnectionName() {
