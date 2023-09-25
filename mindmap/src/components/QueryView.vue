@@ -1,5 +1,10 @@
 <template>
-    <div id="map-content">
+    <div id="map-content" v-if="!viewMap">
+        <v-btn class="toggleMapView mt-2 mr-2" icon dense @click="toggleMapView">
+            <v-icon>
+                mdi-file-tree-outline
+            </v-icon>
+        </v-btn>
         <div id="query" v-show="mapViewMode=='query'">
             <div class="query-content" v-if="localFileQuery.objectType=='Word'">
                 <h2>{{ localFileQuery.name }}</h2>
@@ -109,15 +114,70 @@
 
                     </div>
                     <div  class="query-list-row" style="flex-direction: column;">
-                        <h4>Function</h4>
-                        <p>Inputs</p>
-                          <v-text-field
-                                v-model="localFileQuery.inputs"
-                                hide-details
-                                single-line
-                                type="number"
-                            />
-                        <p>Code</p>
+                        <h3>Function</h3>
+                        <h4>Outputs</h4>
+                        <div class="d-flex">
+                           <v-btn icon dense tile color="success" outlined class="ml-2 mr-2"> 
+                                <v-tooltip top>
+                                  <template v-slot:activator="{ on }">
+                                    <v-icon v-on="on">
+                                      mdi-code-tags
+                                    </v-icon>
+                                  </template>
+                                  New Line
+                                </v-tooltip>
+                            </v-btn>
+                           <v-btn icon dense tile outlined class="ml-2 mr-2" color="amber">
+                                <v-tooltip top>
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">
+                                            mdi-minus
+                                        </v-icon>
+                                    </template>
+                                  Substraction
+                                </v-tooltip>
+                           </v-btn>
+                           <v-btn icon tile dense outlined class="ml-2 mr-2" color="lime">
+                                <v-tooltip top>
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">
+                                            mdi-plus
+                                        </v-icon>
+                                    </template>
+                                  Addition
+                                </v-tooltip>
+                           </v-btn>
+                           <v-btn icon tile dense color="blue" outlined class="ml-2 mr-2">
+                                <v-tooltip top>
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">
+                                            mdi-transit-connection-horizontal
+                                        </v-icon>
+                                    </template>
+                                  Add Relation
+                                </v-tooltip>
+                           </v-btn>
+                           <v-btn icon tile dense color="green" outlined class="ml-2 mr-2">
+                                <v-tooltip top>
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">
+                                            mdi-code-brackets
+                                        </v-icon>
+                                    </template>
+                                  Add Word
+                                </v-tooltip>
+                           </v-btn>
+                           <v-btn icon tile dense color="red" outlined class="ml-2 mr-2">
+                                <v-tooltip top>
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on">
+                                            mdi-pound
+                                        </v-icon>
+                                    </template>
+                                  Add Sett
+                                </v-tooltip>
+                           </v-btn>
+                        </div>
                         <div style="width: 80%;" v-for="(output, i) in localFileQuery.outputs" :key="i">
                             <v-text-field
                                 v-model="localFileQuery.outputs[i]"
@@ -131,6 +191,15 @@
                                 autofocus
                             >
                             </v-text-field>
+                        </div>
+                        <br>
+                        <p>Test Run</p>
+                        <div class="d-flex justify-center align-center" style="width: 80%;">
+                            <v-text-field v-model="testFunction" dense outlined hide-details>
+                            </v-text-field>
+                            <v-btn color="warning" outlined @click="runFunction" class="ml-3">
+                                Run
+                            </v-btn>
                         </div>
                         <br>
                     </div>
@@ -296,6 +365,18 @@
     //Vue instance used for comunication between vue components in the app
     import EventBus from '../event-bus.js';
 
+    function replaceVarFunc(inputString, replacementArray) {
+      return inputString.replace(/\$(\d+)/g, function(match, captureGroup) {
+        const index = parseInt(captureGroup, 10) - 1;
+        if (index >= 0 && index < replacementArray.length) {
+          return replacementArray[index];
+        }
+        else {
+          return match;
+        }
+      });
+    }
+
     export default {
         name: 'QueryView',
         data: () => ({
@@ -312,6 +393,7 @@
                 {value: 'l', icon: 'mdi-arrow-left-bold', size: 19 },
                 {value: 'r', icon: 'mdi-arrow-right-bold', size: 19 },
             ],
+            testFunction: 'comer(comida, pan, kei, cagar)',
         }),
         props: {
             fileQuery: {
@@ -320,8 +402,147 @@
             currentGroup: {
                 required: true,
             },
+            viewMap: {
+                required: true,
+            }
         },
         methods: {
+            toggleMapView() {
+                EventBus.$emit('toggleMapView')
+            },
+            runFunction() {
+                //comer(comida, pan, kei, cagar)
+                let functionName = this.testFunction.split('(')[0]
+                let vars = this.testFunction.split('(')[1].slice(0,-1).split(',').map(word => word.trim());
+
+                let functionObj
+
+                for (let i=0; i<this.currentGroup.connections.length; i++) {
+                    if (this.currentGroup.connections[i].name == functionName) {
+                        functionObj = this.currentGroup.connections[i]
+                        break
+                    }
+                }
+
+                if (functionObj) {
+                    for (let i=0; i<functionObj.outputs.length; i++) {
+                        let code = replaceVarFunc(functionObj.outputs[i], vars)
+                        console.log(code)
+                        //Tag addition
+                        //When code line contains a '+'
+                        if (code.includes(' + ')) {
+                            console.log('Tag addition!')
+                            let tagWeAdd = code.split(' + ')[0].slice(1)
+                            let tagWeAddObject
+                            for (let i=0; i<this.currentGroup.categories.length; i++) {
+                                if (this.currentGroup.categories[i].name == tagWeAdd) {
+                                    tagWeAddObject = this.currentGroup.categories[i]
+                                    break
+                                }
+                            }
+
+                            let objectWeAddToTag = code.split(' + ')[1]
+                            let objectWeAddToTagObject
+                            if (objectWeAddToTag.includes('#')) {
+                                for (let i=0; i<this.currentGroup.categories.length; i++) {
+                                    if (this.currentGroup.categories[i].name == objectWeAddToTag.slice(1,-1)) {
+                                        objectWeAddToTagObject = this.currentGroup.categories[i]
+                                        break
+                                    }
+                                }
+                            }
+                            else {
+                                for (let i=0; i<this.currentGroup.words.length; i++) {
+                                    if (this.currentGroup.words[i].name == objectWeAddToTag.slice(1,-1)) {
+                                        objectWeAddToTagObject = this.currentGroup.words[i]
+                                        break
+                                    }
+                                }
+                            }
+                            if (!tagWeAddObject.words.includes(objectWeAddToTagObject.id)) {
+                                tagWeAddObject.words.push(objectWeAddToTagObject.id)
+                                objectWeAddToTagObject.categories.push(tagWeAddObject)
+                            }
+                        }
+                        //Tag substraction
+                        //When code line contains a '-'
+                        else if (code.includes(' - ')) {
+                            console.log('Tag substraction!')
+                            let tagWeAdd = code.split(' - ')[0].slice(1)
+                            let tagWeAddObject
+                            for (let i=0; i<this.currentGroup.categories.length; i++) {
+                                if (this.currentGroup.categories[i].name == tagWeAdd) {
+                                    tagWeAddObject = this.currentGroup.categories[i]
+                                    break
+                                }
+                            }
+
+                            let objectWeAddToTag = code.split(' - ')[1]
+                            let objectWeAddToTagObject
+                            if (objectWeAddToTag.includes('#')) {
+                                for (let i=0; i<this.currentGroup.categories.length; i++) {
+                                    if (this.currentGroup.categories[i].name == objectWeAddToTag.slice(1,-1)) {
+                                        objectWeAddToTagObject = this.currentGroup.categories[i]
+                                        break
+                                    }
+                                }
+                            }
+                            else {
+                                for (let i=0; i<this.currentGroup.words.length; i++) {
+                                    if (this.currentGroup.words[i].name == objectWeAddToTag.slice(1,-1)) {
+                                        objectWeAddToTagObject = this.currentGroup.words[i]
+                                        break
+                                    }
+                                }
+                            }
+                            if (tagWeAddObject.words.includes(objectWeAddToTagObject.id)) {
+                                tagWeAddObject.words = tagWeAddObject.words.filter(word => word!= objectWeAddToTagObject.id)
+                                objectWeAddToTagObject.categories = objectWeAddToTagObject.categories.filter(category => category.id!=tagWeAddObject.id)
+                            }
+                        }
+                        //Create a connection
+                        else {
+                            console.log('Connection creation!')
+                            let objects = code.split(' ')
+                            let word1 = objects[0].slice(1,-1)
+                            let word2 = objects[2].slice(1,-1)
+                            let connection = objects[1].slice(1,-1)
+                            for (let i=0; i<this.currentGroup.words.length; i++) {
+                                if (this.currentGroup.words[i].name==word1) {
+                                    word1 = this.currentGroup.words[i]
+                                    break
+                                }
+                            }
+                            for (let i=0; i<this.currentGroup.words.length; i++) {
+                                if (this.currentGroup.words[i].name==word2) {
+                                    word2 = this.currentGroup.words[i]
+                                    break
+                                }
+                            }
+                            for (let i=0; i<this.currentGroup.connections.length; i++) {
+                                if (this.currentGroup.connections[i].name==connection) {
+                                    connection = this.currentGroup.connections[i]
+                                    break
+                                }
+                            }
+                            if (word1 && word2 && connection) {
+                                var parsedConnection = {
+                                    directionality: 'lr',
+                                    component1: word1.id,
+                                    component2: word2.id,
+                                    connection: connection.id,
+                                }
+                                EventBus.$emit('pushParsedConnection', connection, parsedConnection)
+                                EventBus.$emit('pushParsedConnection', word1, parsedConnection)
+                                EventBus.$emit('pushParsedConnection', word2, parsedConnection)
+                            }
+                        }
+                    }
+                }
+                else {
+                    alert('No such function: '+functionName)
+                }
+            },
             removeOutput(i) {
                 if (this.localFileQuery.outputs.length>1 && this.localFileQuery.outputs[i]=='') {
                     this.localFileQuery.outputs.splice(i,1)

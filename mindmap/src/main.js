@@ -8,4 +8,3 @@ new Vue({
   vuetify,
   render: h => h(VaultWin),
 }).$mount('#app')
-

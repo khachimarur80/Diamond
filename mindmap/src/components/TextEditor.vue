@@ -432,7 +432,7 @@
                 this.saveContents()
             },
             async renderMarkdown(line) {
-                const content = line.getAttribute('data-text').replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;')
+                const content = line.getAttribute('data-text').replace('\t', 'tttt')
                 let element = line.querySelector('.line-contents')
                 element.innerHTML = marked.parse(content.replace(/\n$/, ''))
                 if (element.firstElementChild) {
@@ -1185,7 +1185,6 @@
 
             },
             async loadContents() {
-                alert('Loading File!')
                 document.getElementById('text').innerHTML = ''
                 this.textViewMode = 'edit'
                 const message = await new Promise(resolve => {
@@ -1204,6 +1203,7 @@
                     //document.documentElement.style.setProperty('--line-count', document.querySelectorAll('.line').length.toString().length);
                 }
 
+                /*
                 const regex = /([\w\-!@#]+)\(([^)]+)\)/g;
 
                 const matches = [];
@@ -1236,6 +1236,7 @@
                     text += outputs.join('\n')
                     window.electronAPI.registerFunctionCall(functionObj.file, text)
                 }
+                */
             },
             saveContents() {
                 if (this.file) {
@@ -1262,6 +1263,7 @@
         mounted() {
             const resizeBarMiddle = document.querySelector("#resizeBarMiddle");
             const textContent = document.querySelector("#text-content");
+            //const mapContent = document.querySelector("#map-content");
 
             resizeBarMiddle.addEventListener("mousedown", () => {
               document.addEventListener("mousemove", resizeMapContent, false);
@@ -1274,6 +1276,9 @@
             function resizeMapContent(e) {
               const size = `${e.clientY + 2 - 40}px`;
               textContent.style.height = size;
+              //mapContent.style.height = `${window.innerHeight - e.clientY + 2}px`;
+              let r = document.querySelector(':root');
+              r.style.setProperty('--mapHeight', `${window.innerHeight - e.clientY + 2}px`);
               document.getElementById('text').setAttribute('user-select', 'none')
             }
         },

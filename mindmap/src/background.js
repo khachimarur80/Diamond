@@ -7,6 +7,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 const path = require('path');
 const fs = require('fs-extra');
 
+
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
@@ -461,6 +462,7 @@ app.on('ready', async () => {
     }
   })
 })
+
 
 if (isDevelopment) {
   if (process.platform === 'win32') {

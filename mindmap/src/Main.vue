@@ -5,8 +5,12 @@
         <div id="app-contents">
         <SideBar :items="treeDataView" :vault="vault" @createFile="createFile"></SideBar>
         <div id="body">
-            <TextEditor ref="textEditor" :file="file" :currentGroup="currentGroup"></TextEditor>
-            <QueryView ref="queryView" :fileQuery="fileQuery" :currentGroup="currentGroup"></QueryView>
+            <TextEditor ref="textEditor" :file="file" :currentGroup="currentGroup">
+            </TextEditor>
+            <MapView ref="mapView" v-if="viewMap" :viewMap="viewMap" :currentGroup="currentGroup">
+            </MapView>
+            <QueryView ref="queryView" :fileQuery="fileQuery" :currentGroup="currentGroup" :viewMap="viewMap"></QueryView>
+
         </div>
         <QueryBar :currentGroup="currentGroup"></QueryBar>
         </div>
@@ -37,6 +41,7 @@ import QueryBar from './components/QueryBar';
 import TitleBar from './components/TitleBar';
 import TextEditor from './components/TextEditor';
 import QueryView from './components/QueryView';
+import MapView from './components/MapView';
 
 //Vue instance used for comunication between vue components in the app
 import EventBus from './event-bus.js';
@@ -50,9 +55,11 @@ export default {
         TitleBar,
         TextEditor,
         QueryView,
+        MapView,
     },
     
     data: () => ({
+        viewMap: false,
         treeDataView: [], //Stores directory structure of current vault
         currentGroup: null,
         selectedObject: [], //Stores selected object for QueryBar.vue
@@ -570,7 +577,11 @@ export default {
             this.saveContents()
             this.updateTreeDataview()
         },
+        // --------------------------------------------- QUERYVIEW ----------------------------------------------- //
 
+        pushParsedConnection(object, parsedConnection) {
+            object.connections.push(parsedConnection)
+        },
         // --------------------------------------------- TEXTEDITOR ---------------------------------------------- //
 
         //Change current file based on history of navigated files, mostly handled in TextEditor.vue
@@ -607,6 +618,10 @@ export default {
                     }
                 }
             }
+        },
+        // ---------------------------------
+        toggleMapView() {
+            this.viewMap = !this.viewMap
         }
     },
 
@@ -628,6 +643,7 @@ export default {
         updateWidth()
     },
     async created() {
+        EventBus.$on('toggleMapView', this.toggleMapView)
         //TitleBar.vue methods
         EventBus.$on('createTab', this.createTab);
         EventBus.$on('toggleSidebar', this.toggleSidebar);
@@ -658,6 +674,7 @@ export default {
         EventBus.$on('deleteInstance', this.deleteInstance)
         //QueryView.vue  methods
         EventBus.$on('openFile', this.openFile);
+        EventBus.$on('pushParsedConnection', this.pushParsedConnection)
 
         //Retrieve opened vault
         const vaultMessage = await new Promise(resolve => {
@@ -784,6 +801,7 @@ export default {
     :root {
     --selection-color: rgba(98, 141, 208, .3);
     --main-bg: #363636;
+    --mapHeight: calc(50% - 10px);
     }
 
     body, html {
@@ -1275,8 +1293,9 @@ export default {
 
     #map-content {
         width: 100%;
-        height: calc(50% - 10px);
+        height: var(--mapHeight);
         display: flex;
+        flex: 1;
         flex-direction: column;
         overflow: hidden;
         position: relative;
@@ -1350,32 +1369,8 @@ export default {
         position: absolute;
     }
 
-    .wordObj {
-        width: 60px;
-        height: 25px;
-        text-overflow: wrap;
-        text-align: center;
-        user-select: none;
-        cursor: pointer;
-        position: absolute;
-        z-index: 1;
-        background: #262626;
-        outline: 1px solid #777;
-        border-radius: 5px;
-        color: #777;
-    }
-    .wordObj:active {
-        outline-color: white !important;
-        color: white !important; 
-    }
-
     .hovering {
         outline-style: dashed !important;
-    }
-
-    svg {
-        z-index: 0;
-        pointer-events: none;
     }
 
     text {
@@ -1740,7 +1735,7 @@ export default {
     .active-line hr {
         display: none;
     }
-    .active-line .line-contents{
+    .active-line .line-contents {
         border-radius: 5px;
         background: #262626;
     }
@@ -1939,5 +1934,40 @@ export default {
     }
     .line-contents:has(.active-instance) {
         outline: 1px solid #628DD0;
+    }
+    .toggleMapView {
+        align-self: flex-end;
+        z-index: 3;
+    }
+    #svg {
+        border-top: 1px solid red;
+        transform: translateY(-45px);
+        z-index: 1;
+    }
+    line {
+        z-index: 1;
+    }
+    .wordObj {
+        width: 60px;
+        height: 26px;
+        text-overflow: wrap;
+        text-align: center;
+        color: #bbb;
+        border: 1px solid #bbb;
+        position: absolute;
+        z-index: 2;
+        background: #262626;
+        border-radius: 13px;
+    }
+    .wordObj:active {
+        border-color: white !important;
+        color: white !important; 
+    }
+    .relation {
+        transform: rotate(45deg);
+        outline: 1px solid #bbb;
+    }
+    .relation-inner {
+        transform: rotate(-45deg);
     }
 </style>
