@@ -116,68 +116,6 @@
                     <div  class="query-list-row" style="flex-direction: column;">
                         <h3>Function</h3>
                         <h4>Outputs</h4>
-                        <div class="d-flex">
-                           <v-btn icon dense tile color="success" outlined class="ml-2 mr-2"> 
-                                <v-tooltip top>
-                                  <template v-slot:activator="{ on }">
-                                    <v-icon v-on="on">
-                                      mdi-code-tags
-                                    </v-icon>
-                                  </template>
-                                  New Line
-                                </v-tooltip>
-                            </v-btn>
-                           <v-btn icon dense tile outlined class="ml-2 mr-2" color="amber">
-                                <v-tooltip top>
-                                    <template v-slot:activator="{ on }">
-                                        <v-icon v-on="on">
-                                            mdi-minus
-                                        </v-icon>
-                                    </template>
-                                  Substraction
-                                </v-tooltip>
-                           </v-btn>
-                           <v-btn icon tile dense outlined class="ml-2 mr-2" color="lime">
-                                <v-tooltip top>
-                                    <template v-slot:activator="{ on }">
-                                        <v-icon v-on="on">
-                                            mdi-plus
-                                        </v-icon>
-                                    </template>
-                                  Addition
-                                </v-tooltip>
-                           </v-btn>
-                           <v-btn icon tile dense color="blue" outlined class="ml-2 mr-2">
-                                <v-tooltip top>
-                                    <template v-slot:activator="{ on }">
-                                        <v-icon v-on="on">
-                                            mdi-transit-connection-horizontal
-                                        </v-icon>
-                                    </template>
-                                  Add Relation
-                                </v-tooltip>
-                           </v-btn>
-                           <v-btn icon tile dense color="green" outlined class="ml-2 mr-2">
-                                <v-tooltip top>
-                                    <template v-slot:activator="{ on }">
-                                        <v-icon v-on="on">
-                                            mdi-code-brackets
-                                        </v-icon>
-                                    </template>
-                                  Add Word
-                                </v-tooltip>
-                           </v-btn>
-                           <v-btn icon tile dense color="red" outlined class="ml-2 mr-2">
-                                <v-tooltip top>
-                                    <template v-slot:activator="{ on }">
-                                        <v-icon v-on="on">
-                                            mdi-pound
-                                        </v-icon>
-                                    </template>
-                                  Add Sett
-                                </v-tooltip>
-                           </v-btn>
-                        </div>
                         <div style="width: 80%;" v-for="(output, i) in localFileQuery.outputs" :key="i">
                             <v-text-field
                                 v-model="localFileQuery.outputs[i]"
@@ -191,15 +129,6 @@
                                 autofocus
                             >
                             </v-text-field>
-                        </div>
-                        <br>
-                        <p>Test Run</p>
-                        <div class="d-flex justify-center align-center" style="width: 80%;">
-                            <v-text-field v-model="testFunction" dense outlined hide-details>
-                            </v-text-field>
-                            <v-btn color="warning" outlined @click="runFunction" class="ml-3">
-                                Run
-                            </v-btn>
                         </div>
                         <br>
                     </div>

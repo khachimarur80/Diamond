@@ -59,7 +59,7 @@ export default {
     },
     
     data: () => ({
-        viewMap: false,
+        viewMap: true,
         treeDataView: [], //Stores directory structure of current vault
         currentGroup: null,
         selectedObject: [], //Stores selected object for QueryBar.vue
@@ -1964,10 +1964,8 @@ export default {
         color: white !important; 
     }
     .relation {
-        transform: rotate(45deg);
-        outline: 1px solid #bbb;
+        position: absolute;
     }
-    .relation-inner {
-        transform: rotate(-45deg);
+    .function {
     }
 </style>
