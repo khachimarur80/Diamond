@@ -40,8 +40,9 @@
             this.connections = []
             this.instances = {}
             this.directionality = 'lr'
-            this.inputs = 1
-            this.outputs = ['']
+            this.inputs = ['']
+            this.statements = ['']
+            this.actions = ['']
         }
     }
     class Word {
@@ -1278,7 +1279,7 @@
               textContent.style.height = size;
               //mapContent.style.height = `${window.innerHeight - e.clientY + 2}px`;
               let r = document.querySelector(':root');
-              r.style.setProperty('--mapHeight', `${window.innerHeight - e.clientY + 2}px`);
+              r.style.setProperty('--mapHeight', `${window.innerHeight - e.clientY - 2}px`);
               document.getElementById('text').setAttribute('user-select', 'none')
             }
         },

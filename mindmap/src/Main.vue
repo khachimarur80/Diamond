@@ -59,7 +59,7 @@ export default {
     },
     
     data: () => ({
-        viewMap: true,
+        viewMap: false,
         treeDataView: [], //Stores directory structure of current vault
         currentGroup: null,
         selectedObject: [], //Stores selected object for QueryBar.vue
@@ -801,7 +801,7 @@ export default {
     :root {
     --selection-color: rgba(98, 141, 208, .3);
     --main-bg: #363636;
-    --mapHeight: calc(50% - 10px);
+    --mapHeight: calc(50% - 20px);
     }
 
     body, html {
@@ -1036,7 +1036,7 @@ export default {
     }
 
     #body {
-        height: 100%;
+        height: calc(100% - 40px);
         flex: 1;
         overflow: hidden;
         background: #1e1e1e;
@@ -1936,8 +1936,10 @@ export default {
         outline: 1px solid #628DD0;
     }
     .toggleMapView {
-        align-self: flex-end;
         z-index: 3;
+        position: absolute;
+        top: 10px;
+        right: 10px;
     }
     #svg {
         border-top: 1px solid red;
@@ -1965,7 +1967,5 @@ export default {
     }
     .relation {
         position: absolute;
-    }
-    .function {
     }
 </style>

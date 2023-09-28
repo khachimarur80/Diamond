@@ -1,6 +1,6 @@
 <template>
     <div id="map-content" v-if="viewMap">
-        <v-btn class="toggleMapView mt-2 mr-2" icon dense @click="toggleMapView">
+        <v-btn class="toggleMapView" icon dense @click="toggleMapView">
             <v-icon>
                 mdi-database
             </v-icon>
@@ -92,14 +92,14 @@
             for (let i=0; i<this.currentGroup.connections.length; i++) {
                 let connectionObj = this.currentGroup.connections[i];
 
-                if (connectionObj.outputs.join('').length) {
+                if (connectionObj.statements.join('').length) {
                     let functionDiv = document.createElement('div')
                     functionDiv.classList.add('function')
                     functionDiv.id = connectionObj.name
 
                     document.getElementById('map-content').appendChild(functionDiv)
 
-                    const input = connectionObj.outputs[0];
+                    const input = connectionObj.statements[0];
                     const regex = /\(([^)]+)\)/g;
 
                     const matches = [];

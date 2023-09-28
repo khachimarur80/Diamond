@@ -178,9 +178,9 @@
             this.connections = []
             this.instances = {}
             this.directionality = 'lr'
-            this.upgrade = false
-            this.outputs = ['']
-            this.inputs = 1
+            this.inputs = ['']
+            this.statements = ['']
+            this.actions = ['']
         }
     }
 

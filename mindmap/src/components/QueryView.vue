@@ -1,6 +1,6 @@
 <template>
     <div id="map-content" v-if="!viewMap">
-        <v-btn class="toggleMapView mt-2 mr-2" icon dense @click="toggleMapView">
+        <v-btn class="toggleMapView" icon dense @click="toggleMapView">
             <v-icon>
                 mdi-file-tree-outline
             </v-icon>
@@ -115,20 +115,85 @@
                     </div>
                     <div  class="query-list-row" style="flex-direction: column;">
                         <h3>Function</h3>
-                        <h4>Outputs</h4>
-                        <div style="width: 80%;" v-for="(output, i) in localFileQuery.outputs" :key="i">
-                            <v-text-field
-                                v-model="localFileQuery.outputs[i]"
-                                :data-id="i"
-                                outlined 
-                                no-resize 
-                                dense 
-                                hide-details 
-                                @keydown.enter="localFileQuery.outputs.push('')"
-                                @keydown.backspace="removeOutput(i)"
-                                autofocus
-                            >
-                            </v-text-field>
+                        <div class="d-flex">
+                            <v-tooltip top>
+                              <template v-slot:activator="{ on, attrs }">
+                                <v-btn text outlined class="ma-1" v-bind="attrs" v-on="on" @click="addStatement('A')">
+                                  <v-icon color="green">mdi-code-brackets</v-icon>
+                                </v-btn>
+                              </template>
+                              <span>Existe concepto</span>
+                            </v-tooltip>
+                            
+                            <v-tooltip top>
+                              <template v-slot:activator="{ on, attrs }">
+                                <v-btn text outlined class="ma-1" v-bind="attrs" v-on="on" @click="addStatement('B')">
+                                  <v-icon color="red">mdi-pound</v-icon>
+                                </v-btn>
+                              </template>
+                              <span>Existe grupo</span>
+                            </v-tooltip>
+
+                            <v-tooltip top>
+                              <template v-slot:activator="{ on, attrs }">
+                                <v-btn text outlined class="ma-1" v-bind="attrs" v-on="on" @click="addStatement('C')">
+                                  <v-icon color="green">mdi-code-brackets</v-icon>
+                                  <v-icon color="blue">mdi-transit-connection-horizontal</v-icon>
+                                  <v-icon color="green">mdi-code-brackets</v-icon>
+                                </v-btn>
+                              </template>
+                              <span>Existe relación</span>
+                            </v-tooltip>
+
+                            <v-tooltip top>
+                              <template v-slot:activator="{ on, attrs }">
+                                <v-btn text outlined class="ma-1" v-bind="attrs" v-on="on" @click="addStatement('D')">
+                                    <v-icon color="red">mdi-pound</v-icon>
+                                        <v-icon color="blue">mdi-transit-connection-horizontal</v-icon>
+                                    <v-icon color="green">mdi-code-brackets</v-icon>
+                                </v-btn>
+                              </template>
+                              <span>Grupo relaciona concepto</span>
+                            </v-tooltip>
+
+                            <v-tooltip top>
+                              <template v-slot:activator="{ on, attrs }">
+                                <v-btn text outlined class="ma-1" v-bind="attrs" v-on="on" @click="addStatement('E')">
+                                  <v-icon color="red">mdi-pound</v-icon>
+                                  <v-icon color="blue">mdi-transit-connection-horizontal</v-icon>
+                                  <v-icon color="red">mdi-pound</v-icon>
+                                </v-btn>
+                              </template>
+                              <span>Grupo relaciona grupo</span>
+                            </v-tooltip>
+                        </div>
+                        <h4>Statements</h4>
+                        <div style="width: 100%;">
+                            <div style="width: 80%;" v-for="(statement, i) in localFileQuery.statements" :key="i" class="statement">
+                                <v-btn icon dense @click="removeStatement(i)" small>
+                                    <v-icon>
+                                        mdi-close
+                                    </v-icon>
+                                </v-btn>
+                                <span contenteditable v-for="(value, key) in statement.items" :key="key" :class="key+'-input'">{{ statement.items[key] }}</span>
+                            </div>
+                        </div>
+                        <h4>Actions</h4>
+                        <div>
+                            <div style="width: 80%;" v-for="(actions, i) in localFileQuery.actions" :key="i">
+                                <v-text-field
+                                    v-model="localFileQuery.actions[i]"
+                                    :data-id="i"
+                                    outlined 
+                                    no-resize 
+                                    dense 
+                                    hide-details 
+                                    @keydown.enter="localFileQuery.actions.push('')"
+                                    @keydown.backspace="removeAction(i)"
+                                    autofocus
+                                >
+                                </v-text-field>
+                            </div>
                         </div>
                         <br>
                     </div>
@@ -294,18 +359,13 @@
     //Vue instance used for comunication between vue components in the app
     import EventBus from '../event-bus.js';
 
-    function replaceVarFunc(inputString, replacementArray) {
-      return inputString.replace(/\$(\d+)/g, function(match, captureGroup) {
-        const index = parseInt(captureGroup, 10) - 1;
-        if (index >= 0 && index < replacementArray.length) {
-          return replacementArray[index];
+    class Statement {
+        constructor(type) {
+            this.type = type
+            this.negated = false
+            this.items = {}
         }
-        else {
-          return match;
-        }
-      });
     }
-
     export default {
         name: 'QueryView',
         data: () => ({
@@ -336,145 +396,39 @@
             }
         },
         methods: {
+            addStatement(type) {
+                if (type==='A') {
+                    let statement = new Statement('A')
+                    statement.items = {'word' : null}
+                    this.localFileQuery.statements.push(statement)
+                }
+                else if (type==='B') {
+                    let statement = new Statement('B')
+                    statement.items = {'category' : null}
+                    this.localFileQuery.statements.push(statement)
+                }
+                else if (type==='C') {
+                    let statement = new Statement('C')
+                    statement.items = {'word1' : null, 'connection' : null, 'word2' : null}
+                    this.localFileQuery.statements.push(statement)
+                }
+                else if (type==='D') {
+                    let statement = new Statement('D')
+                    statement.items = {'category' : null, 'connection' : null, 'word' : null}
+                    this.localFileQuery.statements.push(statement)
+                }
+                else if (type==='E') {
+                    let statement = new Statement('E')
+                    statement.items = {'category1' : null, 'connection' : null, 'category2' : null}
+                    this.localFileQuery.statements.push(statement)
+                }
+            },
             toggleMapView() {
                 EventBus.$emit('toggleMapView')
             },
-            runFunction() {
-                //comer(comida, pan, kei, cagar)
-                let functionName = this.testFunction.split('(')[0]
-                let vars = this.testFunction.split('(')[1].slice(0,-1).split(',').map(word => word.trim());
-
-                let functionObj
-
-                for (let i=0; i<this.currentGroup.connections.length; i++) {
-                    if (this.currentGroup.connections[i].name == functionName) {
-                        functionObj = this.currentGroup.connections[i]
-                        break
-                    }
-                }
-
-                if (functionObj) {
-                    for (let i=0; i<functionObj.outputs.length; i++) {
-                        let code = replaceVarFunc(functionObj.outputs[i], vars)
-                        console.log(code)
-                        //Tag addition
-                        //When code line contains a '+'
-                        if (code.includes(' + ')) {
-                            console.log('Tag addition!')
-                            let tagWeAdd = code.split(' + ')[0].slice(1)
-                            let tagWeAddObject
-                            for (let i=0; i<this.currentGroup.categories.length; i++) {
-                                if (this.currentGroup.categories[i].name == tagWeAdd) {
-                                    tagWeAddObject = this.currentGroup.categories[i]
-                                    break
-                                }
-                            }
-
-                            let objectWeAddToTag = code.split(' + ')[1]
-                            let objectWeAddToTagObject
-                            if (objectWeAddToTag.includes('#')) {
-                                for (let i=0; i<this.currentGroup.categories.length; i++) {
-                                    if (this.currentGroup.categories[i].name == objectWeAddToTag.slice(1,-1)) {
-                                        objectWeAddToTagObject = this.currentGroup.categories[i]
-                                        break
-                                    }
-                                }
-                            }
-                            else {
-                                for (let i=0; i<this.currentGroup.words.length; i++) {
-                                    if (this.currentGroup.words[i].name == objectWeAddToTag.slice(1,-1)) {
-                                        objectWeAddToTagObject = this.currentGroup.words[i]
-                                        break
-                                    }
-                                }
-                            }
-                            if (!tagWeAddObject.words.includes(objectWeAddToTagObject.id)) {
-                                tagWeAddObject.words.push(objectWeAddToTagObject.id)
-                                objectWeAddToTagObject.categories.push(tagWeAddObject)
-                            }
-                        }
-                        //Tag substraction
-                        //When code line contains a '-'
-                        else if (code.includes(' - ')) {
-                            console.log('Tag substraction!')
-                            let tagWeAdd = code.split(' - ')[0].slice(1)
-                            let tagWeAddObject
-                            for (let i=0; i<this.currentGroup.categories.length; i++) {
-                                if (this.currentGroup.categories[i].name == tagWeAdd) {
-                                    tagWeAddObject = this.currentGroup.categories[i]
-                                    break
-                                }
-                            }
-
-                            let objectWeAddToTag = code.split(' - ')[1]
-                            let objectWeAddToTagObject
-                            if (objectWeAddToTag.includes('#')) {
-                                for (let i=0; i<this.currentGroup.categories.length; i++) {
-                                    if (this.currentGroup.categories[i].name == objectWeAddToTag.slice(1,-1)) {
-                                        objectWeAddToTagObject = this.currentGroup.categories[i]
-                                        break
-                                    }
-                                }
-                            }
-                            else {
-                                for (let i=0; i<this.currentGroup.words.length; i++) {
-                                    if (this.currentGroup.words[i].name == objectWeAddToTag.slice(1,-1)) {
-                                        objectWeAddToTagObject = this.currentGroup.words[i]
-                                        break
-                                    }
-                                }
-                            }
-                            if (tagWeAddObject.words.includes(objectWeAddToTagObject.id)) {
-                                tagWeAddObject.words = tagWeAddObject.words.filter(word => word!= objectWeAddToTagObject.id)
-                                objectWeAddToTagObject.categories = objectWeAddToTagObject.categories.filter(category => category.id!=tagWeAddObject.id)
-                            }
-                        }
-                        //Create a connection
-                        else {
-                            console.log('Connection creation!')
-                            let objects = code.split(' ')
-                            let word1 = objects[0].slice(1,-1)
-                            let word2 = objects[2].slice(1,-1)
-                            let connection = objects[1].slice(1,-1)
-                            for (let i=0; i<this.currentGroup.words.length; i++) {
-                                if (this.currentGroup.words[i].name==word1) {
-                                    word1 = this.currentGroup.words[i]
-                                    break
-                                }
-                            }
-                            for (let i=0; i<this.currentGroup.words.length; i++) {
-                                if (this.currentGroup.words[i].name==word2) {
-                                    word2 = this.currentGroup.words[i]
-                                    break
-                                }
-                            }
-                            for (let i=0; i<this.currentGroup.connections.length; i++) {
-                                if (this.currentGroup.connections[i].name==connection) {
-                                    connection = this.currentGroup.connections[i]
-                                    break
-                                }
-                            }
-                            if (word1 && word2 && connection) {
-                                var parsedConnection = {
-                                    directionality: 'lr',
-                                    component1: word1.id,
-                                    component2: word2.id,
-                                    connection: connection.id,
-                                }
-                                EventBus.$emit('pushParsedConnection', connection, parsedConnection)
-                                EventBus.$emit('pushParsedConnection', word1, parsedConnection)
-                                EventBus.$emit('pushParsedConnection', word2, parsedConnection)
-                            }
-                        }
-                    }
-                }
-                else {
-                    alert('No such function: '+functionName)
-                }
-            },
-            removeOutput(i) {
-                if (this.localFileQuery.outputs.length>1 && this.localFileQuery.outputs[i]=='') {
-                    this.localFileQuery.outputs.splice(i,1)
+            removeAction(i) {
+                if (this.localFileQuery.actions.length>1 && this.localFileQuery.actions[i]=='') {
+                    this.localFileQuery.actions.splice(i,1)
                     if (i!=0) {
                         document.querySelector("[data-id='"+(i-1)+"']").focus()
                     }
@@ -482,6 +436,9 @@
                         document.querySelector('[data-id="0"]').focus()
                     }
                 }
+            },
+            removeStatement(i) {
+                this.localFileQuery.statements.splice(i,1)
             },
             getWordById(id) {
                 for(let i=0; i<this.currentGroup.words.length; i++) {
@@ -621,3 +578,35 @@
         }
     }
 </script>
+<style scoped>
+    .word1-input, .word2-input, .word-input {
+        border: 1px solid  var(--v-success-base);
+        outline: none;
+        color: white;
+        width: auto;
+        padding: 0px 5px 0px 5px;
+        border-radius: 5px;
+    }
+    .connection1-input, .connection2-input, .connection-input {
+        border: 1px solid var(--v-primary-base);
+        outline: none;
+        color: white;
+        width: fit-content;
+        padding: 0px 5px 0px 5px;
+        border-radius: 5px;
+    }
+    .category1-input, .category2-input, .category-input {
+        border: 1px solid  var(--v-error-base);
+        outline: none;
+        color: white;
+        width: fit-content;
+        padding: 0px 5px 0px 5px;
+        border-radius: 5px;
+    }
+    .statement {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+    }
+</style>
