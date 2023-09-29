@@ -91,7 +91,7 @@
 
             for (let i=0; i<this.currentGroup.connections.length; i++) {
                 let connectionObj = this.currentGroup.connections[i];
-
+                console.log(connectionObj.statements)
                 if (connectionObj.statements.join('').length) {
                     let functionDiv = document.createElement('div')
                     functionDiv.classList.add('function')

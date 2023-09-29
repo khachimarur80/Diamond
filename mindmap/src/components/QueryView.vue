@@ -175,25 +175,72 @@
                                         mdi-close
                                     </v-icon>
                                 </v-btn>
-                                <span contenteditable v-for="(value, key) in statement.items" :key="key" :class="key+'-input'">{{ statement.items[key] }}</span>
+                                <input 
+                                    v-for="(value, key) in statement.items" 
+                                    :key="key" 
+                                    :class="key+'-input'" 
+                                    v-model="statement.items[key]"
+                                    :style="{ width: statement.items[key].length * 14 + 'px' }"
+                                >
                             </div>
                         </div>
                         <h4>Actions</h4>
+                        <table class="query-list-table">
+                            <thead>
+                                <tr>
+                                    <th>Condition</th>
+                                    <th>Result</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(actions, i) in localFileQuery.actions" :key="i">
+                                    <td>
+                                        <v-text-field
+                                            v-model="localFileQuery.actions[i]"
+                                            :data-id="i"
+                                            outlined 
+                                            no-resize 
+                                            dense 
+                                            hide-details 
+                                            @keydown.enter="localFileQuery.actions.push('')"
+                                            @keydown.backspace="removeAction(i)"
+                                            autofocus
+                                        >
+                                        </v-text-field>
+                                    </td>
+                                    <td>
+                                        <v-text-field
+                                            outlined 
+                                            no-resize 
+                                            dense 
+                                            hide-details 
+                                            autofocus
+                                        >
+                                        </v-text-field>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <h4>Truth table</h4>
                         <div>
-                            <div style="width: 80%;" v-for="(actions, i) in localFileQuery.actions" :key="i">
-                                <v-text-field
-                                    v-model="localFileQuery.actions[i]"
-                                    :data-id="i"
-                                    outlined 
-                                    no-resize 
-                                    dense 
-                                    hide-details 
-                                    @keydown.enter="localFileQuery.actions.push('')"
-                                    @keydown.backspace="removeAction(i)"
-                                    autofocus
-                                >
-                                </v-text-field>
-                            </div>
+                            <table class="query-list-table">
+                                <thead>
+                                <tr>
+                                    <th v-for="(statement, i) in localFileQuery.statements" :key="i">
+                                        <span style="margin: 0px 2px 0px 2px;" v-for="(value, key) in statement.items" :key="key">{{ statement.items[key] }}</span>
+                                    </th>
+                                    <th>Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr v-for="(num, i) in powerTwo" :key="i">
+                                    <td v-for="(val, i) in num" :key="i">
+                                        {{ val }}
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
                         <br>
                     </div>
@@ -574,6 +621,23 @@
         computed: {
             combinedItems() {
                 return [...this.currentGroup.words, ...this.currentGroup.categories];
+            },
+            powerTwo() {
+                let n = this.localFileQuery.statements.length;
+                if (n <= 0) {
+                    return [0];
+                }
+
+                const max_value = Math.pow(2, n) - 1;
+                const bitValues = [];
+
+                for (let i = 0; i <= max_value; i++) {
+                    // Convert the integer to a binary string with 'n' bits and add to the array
+                    const binaryValue = i.toString(2).padStart(n, '0');
+                    bitValues.push(binaryValue);
+                }
+
+                return bitValues;
             }
         }
     }

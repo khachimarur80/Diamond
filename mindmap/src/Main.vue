@@ -1546,16 +1546,16 @@ export default {
     }
 
     .query-list-table {
-    width: 100%;
-    table-layout: fixed;
+        width: 100%;
+        table-layout: fixed;
     }
 
     .query-list-table td, .query-list-table th {
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: fit-content !important;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: fit-content !important;
     }
 
 
