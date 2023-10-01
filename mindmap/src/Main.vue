@@ -7,9 +7,9 @@
         <div id="body">
             <TextEditor ref="textEditor" :file="file" :currentGroup="currentGroup">
             </TextEditor>
-            <MapView ref="mapView" v-if="viewMap" :viewMap="viewMap" :currentGroup="currentGroup">
+            <!--<MapView ref="mapView" v-if="viewMap" :viewMap="viewMap" :currentGroup="currentGroup">
             </MapView>
-            <QueryView ref="queryView" :fileQuery="fileQuery" :currentGroup="currentGroup" :viewMap="viewMap"></QueryView>
+            <QueryView ref="queryView" :fileQuery="fileQuery" :currentGroup="currentGroup" :viewMap="viewMap"></QueryView>-->
 
         </div>
         <QueryBar :currentGroup="currentGroup"></QueryBar>
@@ -40,8 +40,8 @@ import SideBar from './components/SideBar';
 import QueryBar from './components/QueryBar';
 import TitleBar from './components/TitleBar';
 import TextEditor from './components/TextEditor';
-import QueryView from './components/QueryView';
-import MapView from './components/MapView';
+//import QueryView from './components/QueryView';
+//import MapView from './components/MapView';
 
 //Vue instance used for comunication between vue components in the app
 import EventBus from './event-bus.js';
@@ -54,8 +54,8 @@ export default {
         QueryBar,
         TitleBar,
         TextEditor,
-        QueryView,
-        MapView,
+        //QueryView,
+        //MapView,
     },
     
     data: () => ({
@@ -1172,7 +1172,7 @@ export default {
     }
     #text-content {
         width: 100%;
-        height: 50%;
+        height: 100%;
         display: flex;
         flex-direction: column;
         overflow: hidden;
