@@ -88,7 +88,7 @@ You can rename and move them as you please
 
 More menu items will be added for plugins such as tasks plugins, productivity plugins or programming plugins.
 
-## QueryView
+<!--## QueryView
 
 ### Current
 
@@ -121,7 +121,7 @@ You can convert a relation into a function. It will take several inputs, and you
 You can see the words it contains
 
 You can see the relations it contains
-
+-->
 
 ## TextEditor
 
