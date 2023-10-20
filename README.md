@@ -1,11 +1,6 @@
  # MindMap v1.0.0
 
-This is a project to convert language in a tree node, where each node is a concept which is own weight and data.
-They are united through tags, and connections, and the result is an inmense amount of data from text. This data provides the possibility of creating mind maps, creating tests, predicting  your input, fueling AI ...
-
-Its a meaningful mapping of the language, your language, taking into account the context. While you study, you will be generating a tremendous amount of data, and that data will help you study more creating even more data.
-
-This app has several parts, with a outer structure somewhat similar to Obsidian. Here are the main .Vue components that build this app. We will explain the current features and possible future additions.
+This is a project where I test my skills on Electron, Vue and Node. It is a copy of the popular text editor Obsidian and integrates the WYSWYG functionality. It offers all the basic necessities for a text editor. You can also set 3 types of objects. Concept, relations, and tags.
 
 ## Vault System
 
@@ -87,41 +82,6 @@ You can rename and move them as you please
 ### Future
 
 More menu items will be added for plugins such as tasks plugins, productivity plugins or programming plugins.
-
-<!--## QueryView
-
-### Current
-
-Here is one of the most important parts. In the QueryView you view all the data regarding to the Object whose file is currently being focused. It displays all its relations, instance if it has and everything.
-
-There are 3 types of objects, so there will be 3 types of QueryViews
-
-#### Word
-
-You can see the tags it belongs too
-
-You can see its instances
-
-You can see its relations with other words/tags through a relation
-
-
-#### Relation
-
-You can see the tags it belongs too
-
-You can see its instances
-
-You can see the connections it creates
-
-You can convert a relation into a function. It will take several inputs, and you will create local relations within the function that will produce some output, some logs.
-
-
-#### Set (Tag)
-
-You can see the words it contains
-
-You can see the relations it contains
--->
 
 ## TextEditor
 
