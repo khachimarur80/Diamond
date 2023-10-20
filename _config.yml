@@ -1,4 +1,4 @@
-theme: jekyll-theme-cayman-dark
+theme: jekyll-theme-cayman
 title: Diamond
 plugins:
   - jekyll-seo-tag
