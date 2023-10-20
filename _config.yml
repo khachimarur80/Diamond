@@ -1,0 +1,4 @@
+theme: jekyll-theme-cayman-dark
+title: Diamond
+plugins:
+  - jekyll-seo-tag
