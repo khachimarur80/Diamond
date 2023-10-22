@@ -1,4 +1,4 @@
-# MindMap
+# Diamond
 
 This is a project where I test my skills on Electron, Vue and Node. It is a copy of the popular text editor Obsidian and integrates the WYSWYG functionality. It offers all the basic necessities for a text editor. You can also set 3 types of objects. Concept, relations, and tags.
 
